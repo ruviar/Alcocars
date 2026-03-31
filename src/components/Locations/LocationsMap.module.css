@@ -1,0 +1,135 @@
+.section {
+  padding: var(--section-pad) 0;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 18px;
+  align-items: stretch;
+}
+
+.panel {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 22px;
+}
+
+.kicker {
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--silver);
+  margin-bottom: 10px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 4vw, 58px);
+  line-height: 0.95;
+}
+
+.officeList {
+  margin-top: 22px;
+  display: grid;
+  gap: 10px;
+}
+
+.officeButton {
+  width: 100%;
+  text-align: left;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.01);
+  color: var(--chalk);
+  transition: border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
+}
+
+.officeButton:hover {
+  border-color: var(--border-accent);
+  transform: translateX(2px);
+}
+
+.active {
+  border-color: var(--accent);
+  background: rgba(0, 212, 255, 0.08);
+}
+
+.city {
+  display: block;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: var(--white);
+}
+
+.address {
+  display: block;
+  margin-top: 4px;
+  color: var(--silver);
+  font-size: 13px;
+}
+
+.infoCard {
+  margin-top: 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(17, 17, 24, 0.82);
+  padding: 16px;
+}
+
+.infoCard h3 {
+  margin-bottom: 8px;
+}
+
+.infoCard p {
+  color: var(--silver);
+}
+
+.infoCard ul {
+  margin-top: 14px;
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.infoCard strong {
+  color: var(--white);
+}
+
+.mapWrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  height: 560px;
+  min-height: 560px;
+  position: relative;
+}
+
+.map {
+  width: 100%;
+  height: 100% !important;
+  min-height: 100%;
+}
+
+.map :global(.leaflet-popup-content-wrapper) {
+  background: var(--obsidian);
+  color: var(--chalk);
+  border: 1px solid var(--border);
+}
+
+.map :global(.leaflet-popup-tip) {
+  background: var(--obsidian);
+}
+
+@media (max-width: 1020px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .mapWrap {
+    height: 420px;
+    min-height: 420px;
+  }
+}

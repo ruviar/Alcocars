@@ -1,0 +1,170 @@
+.footer {
+  background: var(--coal);
+  border-top: 1px solid var(--border);
+  padding: clamp(96px, 12vw, 150px) 0 clamp(56px, 7vw, 78px);
+}
+
+.inner {
+  display: grid;
+  gap: clamp(34px, 5vw, 52px);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(26px, 3vw, 42px);
+}
+
+.brandColumn {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+}
+
+.logo {
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logoMark {
+  width: 36px;
+  height: 36px;
+  background: var(--accent);
+  color: var(--coal);
+  font-family: var(--font-display);
+  font-size: 16px;
+  letter-spacing: 1px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.logoText {
+  color: var(--white);
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 2px;
+}
+
+.brandText {
+  color: var(--silver);
+  max-width: 34ch;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.colTitle {
+  color: var(--silver);
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+  font-size: 11px;
+  margin-bottom: 14px;
+}
+
+.grid ul {
+  display: grid;
+  gap: 10px;
+}
+
+.footerLink,
+.legalLink,
+.phoneLink {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--silver);
+  text-decoration: none;
+  transition: color var(--transition-fast), transform var(--transition-fast);
+}
+
+.linkAccent {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(0, 212, 255, 0.18);
+  box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.4);
+  transition: background var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.footerLink:hover,
+.legalLink:hover,
+.phoneLink:hover {
+  color: var(--white);
+  transform: translateX(4px);
+}
+
+.footerLink:hover .linkAccent,
+.legalLink:hover .linkAccent,
+.phoneLink:hover .linkAccent {
+  background: var(--accent);
+  box-shadow: 0 0 14px rgba(0, 212, 255, 0.5);
+}
+
+.officeItem {
+  display: grid;
+  gap: 8px;
+}
+
+.officeItem strong {
+  color: var(--white);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.phoneIcon {
+  width: 14px;
+  height: 14px;
+  color: var(--accent);
+  opacity: 0.86;
+}
+
+.legalBar {
+  border-top: 1px solid var(--border);
+  padding-top: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.copyright {
+  color: var(--silver);
+  font-size: 13px;
+}
+
+.legalLinks {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 2vw, 24px);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 980px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 26px;
+  }
+
+  .legalBar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .legalLinks {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}

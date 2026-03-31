@@ -1,0 +1,119 @@
+.page {
+  background: var(--coal);
+  color: var(--white);
+  padding-top: 72px;
+}
+
+.layout {
+  width: var(--container);
+  margin-inline: auto;
+  min-height: calc(100vh - 72px);
+  padding: clamp(20px, 4vw, 42px);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.listColumn {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(52px, 7vw, 110px);
+  line-height: 0.9;
+  letter-spacing: 1px;
+  color: var(--white);
+}
+
+.officeList {
+  display: grid;
+  gap: 12px;
+}
+
+.officeCard {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--glass);
+  padding: 18px;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+.officeCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-accent);
+}
+
+.officeCardActive {
+  background: var(--glass-strong);
+  border-color: var(--border-accent);
+  box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.28), 0 14px 32px rgba(0, 0, 0, 0.3);
+}
+
+.city {
+  font-size: 28px;
+  line-height: 1.06;
+  color: var(--white);
+}
+
+.address,
+.phone,
+.hours,
+.description {
+  margin-top: 8px;
+  color: var(--silver);
+  line-height: 1.55;
+}
+
+.phone {
+  color: var(--white);
+}
+
+.description {
+  color: var(--chalk);
+}
+
+.mapColumn {
+  min-height: 100%;
+}
+
+.mapWrap {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  min-height: 560px;
+}
+
+.map {
+  width: 100%;
+  height: 100% !important;
+}
+
+.mapWrap :global(.leaflet-popup-content-wrapper) {
+  background: var(--obsidian);
+  color: var(--white);
+  border: 1px solid var(--border);
+}
+
+.mapWrap :global(.leaflet-popup-tip) {
+  background: var(--obsidian);
+}
+
+.mapWrap :global(.leaflet-popup-content) {
+  color: var(--white);
+}
+
+@media (max-width: 980px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .mapWrap {
+    min-height: 500px;
+  }
+}

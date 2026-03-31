@@ -1,0 +1,86 @@
+.page {
+  background: var(--coal);
+  color: var(--white);
+  padding-top: calc(72px + clamp(38px, 7vw, 86px));
+  padding-bottom: clamp(62px, 9vw, 116px);
+}
+
+.container {
+  width: var(--container);
+  margin-inline: auto;
+  display: flex;
+  justify-content: center;
+  padding-inline: clamp(16px, 3vw, 24px);
+}
+
+.card,
+.notFoundCard {
+  width: min(800px, 100%);
+  display: grid;
+  gap: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--glass-strong);
+  padding: clamp(22px, 3.4vw, 38px);
+}
+
+.updated {
+  color: var(--silver);
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.title {
+  font-size: clamp(34px, 5vw, 62px);
+  line-height: 0.95;
+  color: var(--white);
+}
+
+.intro {
+  color: var(--silver);
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.content {
+  display: grid;
+  gap: 20px;
+}
+
+.section {
+  display: grid;
+  gap: 10px;
+}
+
+.section h2 {
+  color: var(--white);
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.section p {
+  color: var(--silver);
+  line-height: 1.75;
+}
+
+.homeButton {
+  width: fit-content;
+  margin-top: 4px;
+  padding: 12px 18px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--coal);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.homeButton:hover {
+  background: var(--white);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 212, 255, 0.26);
+}

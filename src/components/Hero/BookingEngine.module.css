@@ -1,0 +1,488 @@
+.engine {
+  display: flex;
+  align-items: stretch;
+  background: rgba(17, 17, 24, 0.7);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border-radius: var(--radius-md);
+  padding: 6px 6px 6px 0;
+  gap: 0;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  margin-bottom: 0;
+  width: 100%;
+  position: relative;
+  overflow: visible;
+}
+
+.fields {
+  display: flex;
+  flex: 1;
+  align-items: stretch;
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
+.field {
+  flex: 1;
+  min-width: 140px;
+  padding: 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  transition: background-color var(--transition-fast);
+  border-radius: var(--radius-sm);
+}
+
+.field:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.divider {
+  width: 1px;
+  background: var(--border);
+  margin: 14px 0;
+  flex-shrink: 0;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--silver);
+}
+
+.label svg {
+  opacity: 0.6;
+}
+
+.customSelect {
+  position: relative;
+}
+
+.customSelectTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+  border: none;
+  padding: 0 28px 0 0;
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.2;
+  min-height: 30px;
+  font-weight: 500;
+  color: var(--white);
+  cursor: pointer;
+  text-align: left;
+  position: relative;
+}
+
+.customSelectTrigger:focus-visible {
+  outline: none;
+  color: var(--accent);
+}
+
+.selectChevron {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: transform var(--transition-fast);
+}
+
+.selectChevronOpen {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.dropdownMenu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  width: 100%;
+  background: rgba(17, 17, 24, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px;
+  list-style: none;
+  margin: 0;
+  z-index: 10;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  animation: dropIn 0.2s ease-out forwards;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.dropdownItem {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-family: var(--font-body);
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--silver);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.dropdownItem:hover,
+.dropdownItemActive {
+  background: var(--glass-strong);
+  color: var(--accent);
+}
+
+.dateRangeRoot {
+  position: relative;
+}
+
+.dateRangeTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+  border: none;
+  padding: 0;
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.2;
+  min-height: 30px;
+  font-weight: 500;
+  color: var(--white);
+  cursor: pointer;
+  text-align: left;
+}
+
+.dateRangeTrigger:focus-visible {
+  outline: none;
+  color: var(--accent);
+}
+
+.dateRangeLabel {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dateRangeIcons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.dateIcon {
+  width: 18px;
+  height: 18px;
+  opacity: 0.85;
+}
+
+.dateChevron {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+  transition: transform var(--transition-fast);
+}
+
+.dateChevronOpen {
+  transform: rotate(180deg);
+}
+
+.dateRangePopover {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(620px, 92vw);
+  background: rgba(17, 17, 24, 0.9);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  z-index: 30;
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.55);
+  animation: popIn 0.2s ease-out forwards;
+}
+
+.dayPicker {
+  color: var(--chalk);
+}
+
+.rdpMonths {
+  display: flex;
+  gap: 16px;
+}
+
+.rdpMonth {
+  min-width: 270px;
+}
+
+.rdpMonthCaption {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  min-height: 30px;
+}
+
+.rdpCaptionLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--chalk);
+  letter-spacing: 0.2px;
+  text-transform: capitalize;
+}
+
+.rdpNav {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.rdpNavButton {
+  pointer-events: auto;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--chalk);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+}
+
+.rdpNavButton:hover {
+  border-color: var(--border-accent);
+  color: var(--accent);
+  background: var(--glass);
+}
+
+.rdpChevron {
+  width: 14px;
+  height: 14px;
+}
+
+.rdpMonthGrid {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.rdpWeekday {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--silver);
+  text-transform: uppercase;
+  text-align: center;
+  padding: 0 0 8px;
+}
+
+.rdpDay {
+  padding: 0;
+  text-align: center;
+}
+
+.rdpDayButton {
+  width: 36px;
+  height: 36px;
+  margin: 0 auto;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--chalk);
+  font-family: var(--font-body);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.rdpDayButton:hover {
+  background: var(--glass-strong);
+  color: var(--accent);
+}
+
+.rdpDayToday .rdpDayButton {
+  box-shadow: inset 0 0 0 1px rgba(0, 212, 255, 0.45);
+}
+
+.rdpDayOutside .rdpDayButton {
+  color: rgba(154, 154, 175, 0.45);
+}
+
+.rdpDayDisabled .rdpDayButton {
+  color: rgba(154, 154, 175, 0.3);
+  cursor: not-allowed;
+}
+
+.rdpDayDisabled .rdpDayButton:hover {
+  background: transparent;
+  color: rgba(154, 154, 175, 0.3);
+}
+
+.rdpDaySelected .rdpDayButton {
+  background: var(--accent);
+  color: var(--coal);
+  font-weight: 700;
+}
+
+.rdpRangeMiddle .rdpDayButton {
+  background: rgba(0, 212, 255, 0.18);
+  color: var(--accent);
+  border-radius: 0;
+}
+
+.rdpRangeStart .rdpDayButton,
+.rdpRangeEnd .rdpDayButton {
+  background: var(--accent);
+  color: var(--coal);
+  font-weight: 700;
+  border-radius: 0;
+}
+
+.rdpRangeStart .rdpDayButton {
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+
+.rdpRangeEnd .rdpDayButton {
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+.rdpRangeStart.rdpRangeEnd .rdpDayButton {
+  border-radius: 10px;
+}
+
+@keyframes dropIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes popInMobile {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 28px;
+  background: var(--accent);
+  color: var(--coal);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+  flex-shrink: 0;
+  min-height: 60px;
+  text-transform: uppercase;
+  cursor: none;
+}
+
+.cta:hover {
+  background: var(--white);
+  transform: translateX(2px);
+  box-shadow: 0 4px 24px rgba(0, 212, 255, 0.35);
+}
+
+.cta svg {
+  transition: transform var(--transition-fast);
+}
+
+.cta:hover svg {
+  transform: translateX(4px);
+}
+
+@media (max-width: 900px) {
+  .engine {
+    flex-direction: column;
+    padding: 6px;
+    gap: 0;
+  }
+
+  .fields {
+    flex-direction: column;
+  }
+
+  .divider {
+    width: auto;
+    height: 1px;
+    margin: 0 16px;
+  }
+
+  .field {
+    padding: 12px 16px;
+  }
+
+  .dateRangePopover {
+    left: 0;
+    transform: none;
+    width: 100%;
+    padding: 12px;
+    animation: popInMobile 0.2s ease-out forwards;
+  }
+
+  .rdpMonths {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .rdpMonth {
+    min-width: 0;
+  }
+
+  .cta {
+    width: 100%;
+    justify-content: center;
+    padding: 16px;
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    min-height: 52px;
+  }
+}

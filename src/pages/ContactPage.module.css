@@ -1,0 +1,223 @@
+.page {
+  position: relative;
+  isolation: isolate;
+  background:
+    linear-gradient(110deg, rgba(8, 11, 18, 0.9) 0%, rgba(8, 11, 18, 0.72) 45%, rgba(8, 11, 18, 0.86) 100%),
+    url('/images/contact-office.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: var(--white);
+  padding-top: clamp(118px, 14vw, 170px);
+  padding-bottom: clamp(84px, 10vw, 138px);
+}
+
+.layout {
+  width: var(--container);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(26px, 4vw, 58px);
+  align-items: start;
+}
+
+.infoColumn {
+  display: grid;
+  align-content: start;
+  gap: 22px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(66px, 12vw, 190px);
+  line-height: 0.78;
+  letter-spacing: 1px;
+  color: var(--white);
+}
+
+.subtitle {
+  color: var(--silver);
+  font-size: clamp(18px, 2.2vw, 24px);
+  line-height: 1.7;
+  max-width: 33ch;
+}
+
+.officeList {
+  display: grid;
+  gap: 12px;
+}
+
+.officeCard {
+  display: grid;
+  gap: 6px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.officeCard h2 {
+  margin: 0;
+  color: var(--white);
+  font-size: 23px;
+  line-height: 1.1;
+}
+
+.officeCard a {
+  width: fit-content;
+  color: var(--accent);
+  font-size: clamp(22px, 2.8vw, 34px);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-decoration: none;
+  transition: color var(--transition-fast), transform var(--transition-fast);
+}
+
+.officeCard a:hover {
+  color: var(--white);
+  transform: translateX(4px);
+}
+
+.whatsappButton {
+  display: inline-grid;
+  gap: 4px;
+  width: fit-content;
+  margin-top: 8px;
+  padding: 14px 24px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(37, 211, 102, 0.55);
+  background: rgba(37, 211, 102, 0.22);
+  color: #c8ffd9;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow: 0 14px 32px rgba(4, 28, 14, 0.45);
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
+  will-change: transform;
+}
+
+.whatsappLead {
+  color: rgba(215, 255, 226, 0.95);
+}
+
+.whatsappNumber {
+  color: #f4fff8;
+  font-size: clamp(22px, 3vw, 30px);
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+
+.whatsappButton:hover {
+  background: rgba(37, 211, 102, 0.28);
+  border-color: #25d366;
+  color: #f2fff6;
+  box-shadow: 0 20px 38px rgba(8, 40, 22, 0.6);
+}
+
+.chatHint {
+  margin: 4px 0 0;
+  color: rgba(205, 213, 226, 0.88);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.formColumn {
+  min-height: 100%;
+}
+
+.formCard {
+  display: grid;
+  gap: 18px;
+  padding: clamp(24px, 3.2vw, 34px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--glass-strong);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.field span {
+  color: var(--silver);
+  font-size: 11px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--white);
+  font-size: 16px;
+  font-family: var(--font-body);
+  line-height: 1.6;
+  padding: 0 0 10px;
+  resize: vertical;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.field textarea {
+  min-height: 120px;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: rgba(154, 154, 175, 0.7);
+}
+
+.field input:focus,
+.field textarea:focus {
+  outline: none;
+  border-bottom-color: var(--accent);
+  box-shadow: 0 1px 0 0 var(--accent);
+}
+
+.submitButton {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 13px 24px;
+  border: none;
+  background: var(--accent);
+  color: var(--coal);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.submitButton:hover {
+  background: var(--white);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 212, 255, 0.3);
+}
+
+.success {
+  color: var(--accent);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+@media (max-width: 980px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .title {
+    max-width: 10ch;
+  }
+
+  .page {
+    background-position: 38% center;
+  }
+}
