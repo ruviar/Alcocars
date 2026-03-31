@@ -198,6 +198,14 @@ export default function ServicesPage() {
               </div>
 
               <div className={styles.textPanel}>
+                <img
+                  className={styles.textPanelBgImage}
+                  src={service.image}
+                  alt=""
+                  aria-hidden="true"
+                  loading="lazy"
+                />
+
                 <span className={styles.serviceNumber}>{service.number}</span>
 
                 <div className={styles.serviceIconWrap} aria-hidden="true">

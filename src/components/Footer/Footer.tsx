@@ -55,9 +55,9 @@ export default function Footer() {
             </p>
           </div>
 
-          <div>
+          <div className={styles.navColumn}>
             <p className={styles.colTitle}>Navegación</p>
-            <ul>
+            <ul className={styles.navList}>
               {quickLinks.map(link => (
                 <li key={link.label}>
                   <Link className={styles.footerLink} to={link.to}>
@@ -69,9 +69,9 @@ export default function Footer() {
             </ul>
           </div>
 
-          <div>
+          <div className={styles.interestColumn}>
             <p className={styles.colTitle}>De Interés</p>
-            <ul>
+            <ul className={styles.interestList}>
               {interestLinks.map(link => (
                 <li key={link.label}>
                   <Link className={styles.footerLink} to={link.to}>
@@ -83,9 +83,9 @@ export default function Footer() {
             </ul>
           </div>
 
-          <div>
+          <div className={styles.contactColumn}>
             <p className={styles.colTitle}>Contacto Local</p>
-            <ul>
+            <ul className={styles.contactList}>
               {localOffices.map(office => (
                 <li key={office.id} className={styles.officeItem}>
                   <strong>{office.city}</strong>

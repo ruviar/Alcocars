@@ -129,6 +129,21 @@
   overflow: hidden;
 }
 
+.textPanel > :not(.textPanelBgImage) {
+  position: relative;
+  z-index: 2;
+}
+
+.textPanelBgImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+  z-index: 0;
+}
+
 .textPanel::before {
   content: '';
   position: absolute;
@@ -138,6 +153,7 @@
   height: 0;
   background: var(--accent);
   border-radius: 0 2px 2px 0;
+  z-index: 3;
   transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -361,8 +377,68 @@
     padding-top: calc(72px + 28px);
   }
 
+  .servicesList {
+    gap: 14px;
+  }
+
   .mediaWrap {
-    min-height: 240px;
+    display: none;
+  }
+
+  .textPanel {
+    min-height: clamp(250px, 72vw, 330px);
+    padding: 22px 18px 20px;
+    justify-content: flex-end;
+    border-color: rgba(255, 255, 255, 0.16);
+    background: rgba(7, 11, 18, 0.34);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .textPanel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(8, 10, 15, 0.24) 0%, rgba(8, 10, 15, 0.8) 58%, rgba(8, 10, 15, 0.94) 100%),
+      linear-gradient(120deg, rgba(0, 212, 255, 0.08) 0%, transparent 60%);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .textPanelBgImage {
+    display: block;
+  }
+
+  .serviceNumber {
+    margin-bottom: 10px;
+  }
+
+  .serviceIconWrap {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 12px;
+  }
+
+  .serviceIconWrap svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .textPanel h2 {
+    font-size: clamp(30px, 10vw, 44px);
+    line-height: 0.92;
+    margin-bottom: 10px;
+  }
+
+  .textPanel p {
+    font-size: 14px;
+    line-height: 1.55;
+    margin-bottom: 18px;
+  }
+
+  .serviceCtaBtn {
+    font-size: 12px;
   }
 
   .heroTitle {

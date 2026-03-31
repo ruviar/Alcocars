@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type TouchEvent } from 'react';
 import { Icon, type Marker as LeafletMarker } from 'leaflet';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -36,7 +36,80 @@ function MapController({ coords }: { coords: [number, number] }) {
 
 export default function OfficesPage() {
   const markerRefs = useRef<Record<string, LeafletMarker | null>>({});
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
+  const swipeHandledRef = useRef(false);
   const [activeOffice, setActiveOffice] = useState<Office>(initialOffice);
+  const activeOfficeIndex = offices.findIndex((office) => office.id === activeOffice.id);
+
+  const goToOffice = (nextIndex: number) => {
+    const normalizedIndex = (nextIndex + offices.length) % offices.length;
+    const nextOffice = offices[normalizedIndex];
+
+    if (nextOffice) {
+      setActiveOffice(nextOffice);
+    }
+  };
+
+  const goToPreviousOffice = () => {
+    goToOffice(activeOfficeIndex - 1);
+  };
+
+  const goToNextOffice = () => {
+    goToOffice(activeOfficeIndex + 1);
+  };
+
+  const resetSwipeState = () => {
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+    swipeHandledRef.current = false;
+  };
+
+  const handleTouchStart = (event: TouchEvent<HTMLElement>) => {
+    const touch = event.touches[0];
+
+    if (!touch) {
+      return;
+    }
+
+    touchStartXRef.current = touch.clientX;
+    touchStartYRef.current = touch.clientY;
+    swipeHandledRef.current = false;
+  };
+
+  const handleTouchMove = (event: TouchEvent<HTMLElement>) => {
+    if (swipeHandledRef.current) {
+      return;
+    }
+
+    const startX = touchStartXRef.current;
+    const startY = touchStartYRef.current;
+    const touch = event.touches[0];
+
+    if (startX === null || startY === null || !touch) {
+      return;
+    }
+
+    const deltaX = touch.clientX - startX;
+    const deltaY = touch.clientY - startY;
+
+    if (Math.abs(deltaX) < 56) {
+      return;
+    }
+
+    if (Math.abs(deltaX) < Math.abs(deltaY) * 1.2) {
+      return;
+    }
+
+    swipeHandledRef.current = true;
+
+    if (deltaX > 0) {
+      goToPreviousOffice();
+      return;
+    }
+
+    goToNextOffice();
+  };
 
   useEffect(() => {
     const popupTimer = window.setTimeout(() => {
@@ -83,7 +156,40 @@ export default function OfficesPage() {
           </div>
         </section>
 
-        <section className={styles.mapColumn} aria-label="Mapa de sedes">
+        <section
+          className={styles.mapColumn}
+          aria-label="Mapa de sedes"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={resetSwipeState}
+          onTouchCancel={resetSwipeState}
+        >
+          <div className={styles.mobileHeaderRow}>
+            <button
+              type="button"
+              className={styles.mobileArrowBtn}
+              onClick={goToPreviousOffice}
+              aria-label="Sede anterior"
+            >
+              <svg viewBox="0 0 20 20" fill="none" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M12.5 4.5 7 10l5.5 5.5" />
+              </svg>
+            </button>
+
+            <h2 className={styles.mobileCityTitle}>{activeOffice.city}</h2>
+
+            <button
+              type="button"
+              className={styles.mobileArrowBtn}
+              onClick={goToNextOffice}
+              aria-label="Siguiente sede"
+            >
+              <svg viewBox="0 0 20 20" fill="none" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="m7.5 4.5 5.5 5.5-5.5 5.5" />
+              </svg>
+            </button>
+          </div>
+
           <div className={styles.mapWrap}>
             <MapContainer center={activeOffice.coords} zoom={14} scrollWheelZoom={false} className={styles.map}>
               <MapController coords={activeOffice.coords} />
@@ -113,6 +219,34 @@ export default function OfficesPage() {
               ))}
             </MapContainer>
           </div>
+
+          <p className={styles.mobileSwipeHint}>Desliza para cambiar de sede</p>
+
+          <div className={styles.mobileDots} aria-label="Selector de sedes">
+            {offices.map((office) => {
+              const isActive = office.id === activeOffice.id;
+
+              return (
+                <button
+                  key={office.id}
+                  type="button"
+                  className={`${styles.mobileDot} ${isActive ? styles.mobileDotActive : ''}`}
+                  onClick={() => setActiveOffice(office)}
+                  aria-label={`Ir a ${office.city}`}
+                  aria-current={isActive ? 'true' : undefined}
+                />
+              );
+            })}
+          </div>
+
+          <article className={styles.mobileInfoCard} aria-label={`Información de ${activeOffice.city}`}>
+            <p className={styles.mobileInfoAddress}>{activeOffice.address}</p>
+            <a className={styles.mobileInfoPhone} href={`tel:${activeOffice.phone.replace(/\s+/g, '')}`}>
+              {activeOffice.phone}
+            </a>
+            <p className={styles.mobileInfoHours}>{activeOffice.hours}</p>
+            <p className={styles.mobileInfoDescription}>{activeOffice.description}</p>
+          </article>
         </section>
       </div>
     </main>

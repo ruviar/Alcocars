@@ -218,6 +218,33 @@
   }
 
   .page {
+    background:
+      linear-gradient(110deg, rgba(8, 11, 18, 0.95) 0%, rgba(8, 11, 18, 0.88) 45%, rgba(8, 11, 18, 0.95) 100%),
+      url('/images/contact-office.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
     background-position: 38% center;
+  }
+
+  .formCard {
+    background: rgba(8, 11, 18, 0.72);
+    border-color: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+  }
+}
+
+@media (max-width: 700px) {
+  .page {
+    background:
+      linear-gradient(112deg, rgba(7, 10, 15, 0.97) 0%, rgba(7, 10, 15, 0.92) 48%, rgba(7, 10, 15, 0.97) 100%),
+      url('/images/contact-office.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: 40% center;
+  }
+
+  .formCard {
+    background: rgba(8, 11, 18, 0.78);
   }
 }

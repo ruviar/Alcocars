@@ -133,7 +133,6 @@ export default function SmartHeader() {
       <div className={styles.inner}>
         {/* Logo */}
         <a className={styles.logo} href="/" onClick={e => { e.preventDefault(); scrollTo('/'); }}>
-          <span className={styles.logoMark}>AC</span>
           <span className={styles.logoText}>Alcocars</span>
         </a>
 

@@ -152,19 +152,91 @@
 }
 
 @media (max-width: 620px) {
+  .footer {
+    padding: 56px 0 30px;
+  }
+
+  .inner {
+    gap: 20px;
+  }
+
   .grid {
     grid-template-columns: 1fr;
-    gap: 26px;
+    gap: 16px;
+  }
+
+  .brandColumn {
+    gap: 10px;
+  }
+
+  .logo {
+    gap: 8px;
+  }
+
+  .logoMark {
+    width: 30px;
+    height: 30px;
+    font-size: 13px;
+  }
+
+  .logoText {
+    font-size: 18px;
+    letter-spacing: 1.2px;
+  }
+
+  .brandText {
+    display: none;
+  }
+
+  .interestColumn {
+    display: none;
+  }
+
+  .navList li:nth-child(n + 4) {
+    display: none;
+  }
+
+  .contactList li:nth-child(n + 3) {
+    display: none;
+  }
+
+  .colTitle {
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    margin-bottom: 8px;
+  }
+
+  .grid ul {
+    gap: 8px;
+  }
+
+  .footerLink,
+  .phoneLink,
+  .legalLink {
+    gap: 7px;
+    font-size: 13px;
+  }
+
+  .officeItem {
+    gap: 6px;
+  }
+
+  .officeItem strong {
+    font-size: 13px;
   }
 
   .legalBar {
     flex-direction: column;
     align-items: flex-start;
+    gap: 8px;
+    padding-top: 14px;
   }
 
   .legalLinks {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
+    display: none;
+  }
+
+  .copyright {
+    font-size: 11px;
   }
 }
