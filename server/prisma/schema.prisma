@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum VehicleCategory {
+  TURISMOS
+  FURGONETAS
+  SUV_4X4
+  AUTOCARAVANAS
+}
+
+enum FuelType {
+  GASOLINA
+  DIESEL
+  ELECTRICO
+  HIBRIDO
+}
+
+enum TransmissionType {
+  MANUAL
+  AUTOMATICO
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum ExtraType {
+  BABY_SEAT
+  SNOW_CHAINS
+  ADDITIONAL_DRIVER
+}
+
+model Office {
+  id           String        @id @default(cuid())
+  slug         String        @unique
+  city         String
+  address      String
+  phone        String
+  email        String
+  hours        String
+  lat          Float
+  lng          Float
+  description  String
+  vehicles     Vehicle[]
+  reservations Reservation[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@map("offices")
+}
+
+model Vehicle {
+  id           String           @id @default(cuid())
+  slug         String           @unique
+  name         String
+  brand        String
+  category     VehicleCategory
+  seats        Int
+  power        String
+  fuel         FuelType
+  transmission TransmissionType
+  dailyRate    Decimal          @db.Decimal(10, 2)
+  imageUrl     String
+  highlight    String
+  isActive     Boolean          @default(true)
+  officeId     String
+  office       Office           @relation(fields: [officeId], references: [id])
+  reservations Reservation[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([officeId])
+  @@index([category])
+  @@index([isActive])
+  @@map("vehicles")
+}
+
+model Client {
+  id           String        @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String        @unique
+  phone        String
+  reservations Reservation[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@map("clients")
+}
+
+model Reservation {
+  id               String            @id @default(cuid())
+  confirmationCode String            @unique
+  vehicleId        String
+  vehicle          Vehicle           @relation(fields: [vehicleId], references: [id])
+  clientId         String
+  client           Client            @relation(fields: [clientId], references: [id])
+  officeId         String
+  office           Office            @relation(fields: [officeId], references: [id])
+  startDate        DateTime          @db.Date
+  endDate          DateTime          @db.Date
+  totalDays        Int
+  dailyRate        Decimal           @db.Decimal(10, 2)
+  extrasTotal      Decimal           @db.Decimal(10, 2) @default(0)
+  totalAmount      Decimal           @db.Decimal(10, 2)
+  status           ReservationStatus @default(PENDING)
+  notes            String?
+  extras           ReservationExtra[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@index([vehicleId, startDate, endDate])
+  @@index([status])
+  @@map("reservations")
+}
+
+model ReservationExtra {
+  id            String      @id @default(cuid())
+  reservationId String
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  type          ExtraType
+  pricePerDay   Decimal     @db.Decimal(10, 2)
+  totalPrice    Decimal     @db.Decimal(10, 2)
+
+  @@map("reservation_extras")
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+
+  @@map("admin_users")
+}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { gsap } from 'gsap';
 import { offices } from '../data/offices';
+import { api } from '../lib/api';
 import styles from './ContactPage.module.css';
 
 type ContactFormData = {
@@ -74,10 +75,23 @@ export default function ContactPage() {
     }
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setFormData(initialFormData);
-    setIsSubmitted(true);
+    setIsLoading(true);
+    setSubmitError(null);
+
+    try {
+      await api.post('/api/contact', formData);
+      setFormData(initialFormData);
+      setIsSubmitted(true);
+    } catch (err: unknown) {
+      setSubmitError(err instanceof Error ? err.message : 'Error al enviar el mensaje');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -160,9 +174,15 @@ export default function ContactPage() {
               />
             </label>
 
-            <button className={styles.submitButton} type="submit">
-              Enviar solicitud
+            <button className={styles.submitButton} type="submit" disabled={isLoading}>
+              {isLoading ? 'Enviando...' : 'Enviar solicitud'}
             </button>
+
+            {submitError && (
+              <p className={styles.error} role="alert" aria-live="assertive">
+                {submitError}
+              </p>
+            )}
 
             {isSubmitted && (
               <p className={styles.success} role="status" aria-live="polite">

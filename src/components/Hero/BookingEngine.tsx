@@ -229,7 +229,7 @@ export default function BookingEngine() {
                   mode="range"
                   locale={es}
                   weekStartsOn={1}
-                  numberOfMonths={2}
+                  numberOfMonths={1}
                   pagedNavigation
                   showOutsideDays
                   fixedWeeks

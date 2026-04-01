@@ -1,0 +1,64 @@
+import Fastify from 'fastify';
+import cors from '@fastify/cors';
+import jwt from '@fastify/jwt';
+import { env } from './config/env';
+import { officesRouter } from './modules/offices/offices.router';
+import { vehiclesRouter } from './modules/vehicles/vehicles.router';
+import { reservationsRouter } from './modules/reservations/reservations.router';
+import { contactRouter } from './modules/contact/contact.router';
+import { authRouter } from './modules/admin/auth/auth.router';
+import { adminRouter } from './modules/admin/admin.router';
+
+export async function buildApp() {
+  const app = Fastify({
+    logger: {
+      level: env.NODE_ENV === 'production' ? 'warn' : 'info',
+      transport:
+        env.NODE_ENV !== 'production'
+          ? { target: 'pino-pretty', options: { colorize: true } }
+          : undefined,
+    },
+  });
+
+  // CORS — allow the Vite dev server and production frontend origin
+  await app.register(cors, {
+    origin: env.CORS_ORIGIN,
+    methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
+  });
+
+  // JWT — decorates request.jwtVerify() and app.jwt.sign()
+  await app.register(jwt, { secret: env.JWT_SECRET });
+
+  // Health check
+  app.get('/api/health', async () => ({
+    status: 'ok',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  }));
+
+  // Public API routes
+  await app.register(officesRouter, { prefix: '/api' });
+  await app.register(vehiclesRouter, { prefix: '/api' });
+  await app.register(reservationsRouter, { prefix: '/api' });
+  await app.register(contactRouter, { prefix: '/api' });
+
+  // Admin — auth login (public)
+  await app.register(authRouter, { prefix: '/api/admin' });
+
+  // Admin — protected backoffice routes
+  await app.register(adminRouter, { prefix: '/api/admin' });
+
+  return app;
+}
+
+// Only start server when run directly (not when imported by tests)
+if (require.main === module) {
+  buildApp().then((app) => {
+    app.listen({ port: env.PORT, host: '0.0.0.0' }, (err) => {
+      if (err) {
+        app.log.error(err);
+        process.exit(1);
+      }
+    });
+  });
+}
