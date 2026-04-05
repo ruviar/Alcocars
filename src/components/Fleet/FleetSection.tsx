@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { addDays, startOfToday } from 'date-fns';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useNavigate } from 'react-router-dom';
 import { vehicles, type Vehicle } from '../../data/vehicles';
 import styles from './FleetSection.module.css';
 
@@ -43,11 +45,27 @@ function FeatureIcon({ type }: { type: 'seats' | 'power' | 'fuel' | 'transmissio
 export default function FleetSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const [activeFilter, setActiveFilter] = useState<Vehicle['category']>('Turismos');
+  const navigate = useNavigate();
 
   const filteredVehicles = useMemo(
     () => vehicles.filter((vehicle) => vehicle.category === activeFilter),
     [activeFilter],
   );
+
+  const handleReserve = (category: Vehicle['category']) => {
+    const from = startOfToday();
+
+    navigate('/reserva', {
+      state: {
+        location: 'Zaragoza',
+        vehicleType: category === '4x4' ? '4×4' : category,
+        dateRange: {
+          from,
+          to: addDays(from, 1),
+        },
+      },
+    });
+  };
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -147,6 +165,16 @@ export default function FleetSection() {
                     <span>{vehicle.transmission}</span>
                   </li>
                 </ul>
+
+                <div className={styles.cardFooter}>
+                  <button
+                    type="button"
+                    className={styles.reserveButton}
+                    onClick={() => handleReserve(vehicle.category)}
+                  >
+                    Reservar
+                  </button>
+                </div>
               </div>
             </article>
           ))}

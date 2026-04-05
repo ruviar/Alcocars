@@ -3,7 +3,7 @@
     radial-gradient(900px 460px at 0% -10%, rgba(0, 212, 255, 0.13), transparent 58%),
     radial-gradient(820px 420px at 100% 0%, rgba(0, 212, 255, 0.08), transparent 64%),
     var(--coal);
-  color: var(--white);
+  color: var(--chalk);
   padding-top: calc(72px + clamp(42px, 8vw, 102px));
   padding-bottom: clamp(70px, 10vw, 130px);
 }
@@ -36,7 +36,7 @@
   font-size: clamp(58px, 9vw, 118px);
   line-height: 0.82;
   letter-spacing: 1px;
-  color: var(--white);
+  color: var(--chalk);
 }
 
 .summaryCard {
@@ -71,7 +71,7 @@
 .summaryValue {
   font-size: clamp(22px, 2.6vw, 32px);
   line-height: 1.1;
-  color: var(--white);
+  color: var(--chalk);
 }
 
 .extrasCard {
@@ -88,7 +88,7 @@
 .extrasTitle {
   font-size: clamp(26px, 3.2vw, 34px);
   line-height: 1;
-  color: var(--white);
+  color: var(--chalk);
 }
 
 .extrasText {
@@ -117,7 +117,7 @@
 }
 
 .extraLabel {
-  color: var(--white);
+  color: var(--chalk);
   font-size: 16px;
   line-height: 1.4;
 }
@@ -188,7 +188,7 @@
 .formTitle {
   font-size: clamp(30px, 3.6vw, 42px);
   line-height: 1;
-  color: var(--white);
+  color: var(--chalk);
 }
 
 .field {
@@ -208,7 +208,7 @@
   border: none;
   border-bottom: 1px solid var(--border);
   background: transparent;
-  color: var(--white);
+  color: var(--chalk);
   font-size: 16px;
   line-height: 1.6;
   font-family: var(--font-body);
@@ -236,7 +236,7 @@
   border-radius: var(--radius-sm);
   border: none;
   background: var(--accent);
-  color: var(--coal);
+  color: var(--chalk);
   text-transform: uppercase;
   font-size: 14px;
   font-weight: 800;
@@ -260,9 +260,10 @@
 }
 
 .submitButton:hover {
-  background: var(--white);
+  background: var(--chalk);
+  color: var(--graphite);
   transform: translateY(-1px);
-  box-shadow: 0 12px 28px rgba(0, 212, 255, 0.26);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
 }
 
 .submitButton:disabled {
@@ -280,7 +281,7 @@
 .emptyPage {
   min-height: 100vh;
   background: var(--coal);
-  color: var(--white);
+  color: var(--chalk);
   display: grid;
   place-items: center;
   padding: calc(72px + 36px) 18px 36px;
@@ -323,7 +324,7 @@
   border-radius: var(--radius-sm);
   border: 1px solid var(--accent);
   background: var(--accent);
-  color: var(--coal);
+  color: var(--chalk);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.8px;
@@ -332,9 +333,10 @@
 }
 
 .emptyButton:hover {
-  background: var(--white);
+  background: var(--chalk);
+  color: var(--graphite);
   transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(0, 212, 255, 0.24);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
 }
 
 .errorText {
@@ -393,7 +395,7 @@
 .vehicleName {
   flex: 1;
   font-size: 15px;
-  color: var(--white);
+  color: var(--chalk);
 }
 
 .vehicleRate {

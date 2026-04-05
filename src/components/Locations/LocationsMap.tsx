@@ -10,8 +10,8 @@ import 'leaflet/dist/leaflet.css';
 import { offices, type Office } from '../../data/offices';
 import styles from './LocationsMap.module.css';
 
-const accentColor = '#00D4FF';
-const mutedColor = '#7E7E93';
+const accentColor = '#8FBE2F';
+const mutedColor = '#7E8799';
 
 function FlyToOffice({ office }: { office: Office }) {
   const map = useMap();
@@ -87,7 +87,7 @@ export default function LocationsMap() {
           >
             <FlyToOffice office={selectedOffice} />
             <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
               attribution="&copy; OpenStreetMap contributors &copy; CARTO"
             />
 

@@ -154,7 +154,7 @@
   border: none;
   border-bottom: 1px solid var(--border);
   background: transparent;
-  color: var(--white);
+  color: var(--chalk);
   font-size: 16px;
   font-family: var(--font-body);
   line-height: 1.6;
@@ -187,7 +187,7 @@
   padding: 13px 24px;
   border: none;
   background: var(--accent);
-  color: var(--coal);
+  color: var(--chalk);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.5px;

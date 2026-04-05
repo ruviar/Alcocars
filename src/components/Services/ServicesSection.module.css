@@ -39,7 +39,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--white);
 }
 
 .featured {
@@ -69,13 +69,14 @@
   flex-direction: column;
   justify-content: flex-end;
   background:
-    linear-gradient(180deg, rgba(17, 17, 24, 0.2), rgba(17, 17, 24, 0.95));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.76), rgba(241, 241, 241, 0.98));
 }
 
 .content h3 {
   font-size: clamp(24px, 3vw, 40px);
   line-height: 0.95;
   margin-bottom: 12px;
+  color: var(--chalk);
 }
 
 .content p {

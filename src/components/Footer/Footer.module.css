@@ -1,5 +1,5 @@
 .footer {
-  background: var(--coal);
+  background: var(--graphite);
   border-top: 1px solid var(--border);
   padding: clamp(96px, 12vw, 150px) 0 clamp(56px, 7vw, 78px);
 }
@@ -33,7 +33,7 @@
   width: 36px;
   height: 36px;
   background: var(--accent);
-  color: var(--coal);
+  color: var(--chalk);
   font-family: var(--font-display);
   font-size: 16px;
   letter-spacing: 1px;
@@ -44,21 +44,21 @@
 }
 
 .logoText {
-  color: var(--white);
+  color: var(--chalk);
   font-family: var(--font-display);
   font-size: 22px;
   letter-spacing: 2px;
 }
 
 .brandText {
-  color: var(--silver);
+  color: var(--chalk);
   max-width: 34ch;
   font-size: 14px;
   line-height: 1.65;
 }
 
 .colTitle {
-  color: var(--silver);
+  color: var(--chalk);
   text-transform: uppercase;
   letter-spacing: 1.6px;
   font-size: 11px;
@@ -77,7 +77,7 @@
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  color: var(--silver);
+  color: var(--chalk);
   text-decoration: none;
   transition: color var(--transition-fast), transform var(--transition-fast);
 }
@@ -86,15 +86,15 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: rgba(0, 212, 255, 0.18);
-  box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.4);
+  background: rgba(175, 226, 58, 0.55);
+  box-shadow: 0 0 0 0 rgba(175, 226, 58, 0.36);
   transition: background var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .footerLink:hover,
 .legalLink:hover,
 .phoneLink:hover {
-  color: var(--white);
+  color: var(--accent-dim);
   transform: translateX(4px);
 }
 
@@ -102,7 +102,7 @@
 .legalLink:hover .linkAccent,
 .phoneLink:hover .linkAccent {
   background: var(--accent);
-  box-shadow: 0 0 14px rgba(0, 212, 255, 0.5);
+  box-shadow: 0 0 14px rgba(175, 226, 58, 0.5);
 }
 
 .officeItem {
@@ -111,7 +111,7 @@
 }
 
 .officeItem strong {
-  color: var(--white);
+  color: var(--chalk);
   font-size: 15px;
   font-weight: 700;
 }
@@ -119,8 +119,8 @@
 .phoneIcon {
   width: 14px;
   height: 14px;
-  color: var(--accent);
-  opacity: 0.86;
+  color: var(--accent-dim);
+  opacity: 0.9;
 }
 
 .legalBar {

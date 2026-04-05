@@ -1,6 +1,6 @@
 .page {
   background: var(--coal);
-  color: var(--white);
+  color: #fff;
   padding-top: 72px;
   padding-bottom: clamp(80px, 10vw, 160px);
 }
@@ -29,13 +29,7 @@
 .bgOverlay {
   position: absolute;
   inset: 0;
-  /* Filtro oscuro que se desvanece suavemente para fundirse con el fondo de la web */
-  background: linear-gradient(
-    to bottom,
-    var(--coal) 0%,
-    rgba(10, 10, 15, 0.75) 50%,
-    var(--coal) 100%
-  );
+  background: rgba(0, 0, 0, 0.58);
   z-index: 1;
 }
 
@@ -55,7 +49,7 @@
   font-size: 12px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--silver);
+  color: rgba(255, 255, 255, 0.6);
   margin-bottom: 14px;
 }
 
@@ -71,6 +65,7 @@
   font-size: clamp(60px, 9vw, 148px);
   line-height: 0.84;
   letter-spacing: 1px;
+  color: #fff;
 }
 
 .heroLine {
@@ -78,7 +73,7 @@
 }
 
 .heroSubtitle {
-  color: var(--silver);
+  color: rgba(255, 255, 255, 0.82);
   font-size: clamp(18px, 2.2vw, 24px);
   line-height: 1.75;
   max-width: 38ch;
@@ -116,7 +111,7 @@
 }
 
 .splitText {
-  color: var(--silver);
+  color: rgba(255, 255, 255, 0.78);
   font-size: clamp(16px, 1.8vw, 20px);
   line-height: 1.9;
   max-width: 52ch;
@@ -189,7 +184,7 @@
 }
 
 .valueCard p {
-  color: var(--silver);
+  color: rgba(255, 255, 255, 0.72);
   line-height: 1.7;
 }
 

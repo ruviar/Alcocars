@@ -3,7 +3,7 @@
     radial-gradient(900px 420px at 10% -8%, rgba(0, 212, 255, 0.14), transparent 60%),
     radial-gradient(900px 420px at 100% 0%, rgba(0, 212, 255, 0.1), transparent 64%),
     var(--coal);
-  color: var(--white);
+  color: var(--chalk);
   padding-top: calc(72px + clamp(52px, 8vw, 112px));
   padding-bottom: clamp(72px, 10vw, 132px);
 }
@@ -138,7 +138,7 @@
 
 .readMoreButton:hover {
   background: var(--accent);
-  color: var(--coal);
+  color: var(--chalk);
   box-shadow: 0 8px 24px rgba(0, 212, 255, 0.24);
 }
 

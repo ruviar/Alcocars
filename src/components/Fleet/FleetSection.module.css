@@ -1,8 +1,9 @@
 .section {
   padding: var(--section-pad) 0;
   background:
-    radial-gradient(1200px 600px at 15% 0%, rgba(0, 212, 255, 0.06), transparent 70%),
-    linear-gradient(180deg, transparent 0%, rgba(17, 17, 24, 0.6) 100%);
+    radial-gradient(1000px 420px at 8% -10%, rgba(175, 226, 58, 0.18), transparent 70%),
+    radial-gradient(900px 460px at 95% 10%, rgba(1, 35, 105, 0.08), transparent 72%),
+    var(--coal);
 }
 
 .container {
@@ -27,7 +28,7 @@
   font-size: clamp(44px, 7vw, 84px);
   letter-spacing: 1px;
   line-height: 0.95;
-  color: var(--white);
+  color: var(--chalk);
 }
 
 .subtitle {
@@ -50,17 +51,17 @@
   letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--chalk);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--white);
   transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
 }
 
 .filter:hover {
-  border-color: var(--border-accent);
+  border-color: rgba(1, 35, 105, 0.3);
 }
 
 .filterActive {
   border-color: var(--accent);
-  color: var(--coal);
+  color: var(--chalk);
   background: var(--accent);
 }
 
@@ -73,14 +74,14 @@
 .card {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(17, 17, 24, 0.9));
+  background: var(--white);
   overflow: hidden;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
 .card:hover {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.35), 0 20px 45px rgba(0, 0, 0, 0.35);
+  border-color: rgba(175, 226, 58, 0.8);
+  box-shadow: 0 14px 34px rgba(1, 35, 105, 0.12);
   transform: translateY(-4px);
 }
 
@@ -88,7 +89,7 @@
   position: relative;
   aspect-ratio: 16 / 10;
   overflow: hidden;
-  background: var(--obsidian);
+  background: var(--graphite);
 }
 
 .media img {
@@ -106,8 +107,9 @@
   position: absolute;
   left: 12px;
   bottom: 12px;
-  background: rgba(10, 10, 15, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(1, 35, 105, 0.14);
+  color: var(--chalk);
   padding: 6px 10px;
   border-radius: 999px;
   font-size: 11px;
@@ -135,7 +137,8 @@
 .rate {
   font-family: var(--font-mono);
   font-size: 14px;
-  color: var(--accent);
+  color: var(--accent-dim);
+  font-weight: 700;
 }
 
 .rate span {
@@ -147,6 +150,7 @@
   margin-top: 8px;
   font-size: 24px;
   line-height: 1.1;
+  color: var(--chalk);
 }
 
 .category {
@@ -167,18 +171,51 @@
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: var(--chalk);
+  color: var(--silver);
 }
 
 .features svg {
   width: 14px;
   height: 14px;
-  fill: var(--accent);
+  fill: var(--silver);
   flex-shrink: 0;
+}
+
+.cardFooter {
+  margin-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.reserveButton {
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  background: var(--accent);
+  color: var(--chalk);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+}
+
+.reserveButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(143, 190, 47, 0.28);
+  background: #C0EA56;
 }
 
 @media (max-width: 700px) {
   .features {
     grid-template-columns: 1fr;
+  }
+
+  .cardFooter {
+    justify-content: stretch;
+  }
+
+  .reserveButton {
+    width: 100%;
   }
 }

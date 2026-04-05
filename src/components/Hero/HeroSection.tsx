@@ -110,12 +110,6 @@ export default function HeroSection() {
       <div ref={engineRef} className={styles.engineWrap}>
         <BookingEngine />
       </div>
-
-      {/* Scroll indicator */}
-      <div className={styles.scrollHint}>
-        <span className={styles.scrollLine} />
-        <span>Explorar</span>
-      </div>
     </section>
   );
 }

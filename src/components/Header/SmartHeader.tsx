@@ -4,13 +4,13 @@ import { gsap } from 'gsap';
 import styles from './SmartHeader.module.css';
 
 const navLinks = [
-  { label: 'Inicio', href: '/' },
-  { label: 'Flota', href: '/flota' },
-  { label: 'Servicios', href: '/servicios' },
-  { label: 'Blog', href: '/blog' },
-  { label: 'Sedes', href: '/sedes' },
-  { label: 'Empresa', href: '/empresa' },
-  { label: 'Contacto', href: '/contacto' },
+  { label: 'Inicio', href: '/', hasChevron: false },
+  { label: 'Flota', href: '/flota', hasChevron: true },
+  { label: 'Servicios', href: '/servicios', hasChevron: true },
+  { label: 'Blog', href: '/blog', hasChevron: false },
+  { label: 'Sedes', href: '/sedes', hasChevron: true },
+  { label: 'Empresa', href: '/empresa', hasChevron: false },
+  { label: 'Contacto', href: '/contacto', hasChevron: false },
 ];
 
 export default function SmartHeader() {
@@ -128,12 +128,14 @@ export default function SmartHeader() {
     }
   };
 
+  const isCurrentPath = (href: string) => location.pathname === href;
+
   return (
     <header ref={headerRef} className={styles.header}>
       <div className={styles.inner}>
         {/* Logo */}
-        <a className={styles.logo} href="/" onClick={e => { e.preventDefault(); scrollTo('/'); }}>
-          <span className={styles.logoText}>Alcocars</span>
+        <a className={styles.logo} href="/" onClick={e => { e.preventDefault(); scrollTo('/'); }} aria-label="Ir al inicio de Alcocars">
+          <img src="/images/logo.png" alt="Alcocars" className={styles.logoImage} loading="eager" />
         </a>
 
         {/* Desktop Nav */}
@@ -142,10 +144,24 @@ export default function SmartHeader() {
             <div key={link.label} className={styles.navItem}>
               <a
                 href={link.href}
-                className={styles.navLink}
+                className={`${styles.navLink} ${isCurrentPath(link.href) ? styles.navLinkActive : ''}`}
                 onClick={e => { e.preventDefault(); scrollTo(link.href); }}
               >
                 {link.label}
+                {link.hasChevron ? (
+                  <svg
+                    className={styles.navChevron}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                ) : null}
               </a>
             </div>
           ))}

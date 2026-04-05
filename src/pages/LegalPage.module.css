@@ -1,6 +1,6 @@
 .page {
   background: var(--coal);
-  color: var(--white);
+  color: var(--chalk);
   padding-top: calc(72px + clamp(38px, 7vw, 86px));
   padding-bottom: clamp(62px, 9vw, 116px);
 }
@@ -34,7 +34,7 @@
 .title {
   font-size: clamp(34px, 5vw, 62px);
   line-height: 0.95;
-  color: var(--white);
+  color: var(--chalk);
 }
 
 .intro {
@@ -54,7 +54,7 @@
 }
 
 .section h2 {
-  color: var(--white);
+  color: var(--chalk);
   font-size: 24px;
   line-height: 1.1;
 }
@@ -71,7 +71,7 @@
   border: 1px solid var(--accent);
   border-radius: var(--radius-sm);
   background: var(--accent);
-  color: var(--coal);
+  color: var(--chalk);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.8px;
@@ -80,7 +80,8 @@
 }
 
 .homeButton:hover {
-  background: var(--white);
+  background: var(--chalk);
+  color: var(--graphite);
   transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(0, 212, 255, 0.26);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
 }
