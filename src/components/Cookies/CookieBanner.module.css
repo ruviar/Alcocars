@@ -42,8 +42,8 @@
   min-width: 132px;
   padding: 12px 18px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: var(--white);
+  border: 1px solid rgba(143, 190, 47, 0.6);
+  background: var(--accent);
   color: var(--chalk);
   font-size: 12px;
   font-weight: 700;
@@ -53,9 +53,9 @@
 }
 
 .button:hover {
-  background: var(--graphite);
+  background: #C0EA56;
   transform: translateY(-1px);
-  box-shadow: 0 8px 22px rgba(1, 35, 105, 0.14);
+  box-shadow: 0 8px 22px rgba(143, 190, 47, 0.25);
 }
 
 @media (max-width: 760px) {
