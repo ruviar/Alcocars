@@ -343,7 +343,7 @@
 }
 
 .errorText {
-  color: #c0392b;
+  color: var(--error);
   font-size: 14px;
   line-height: 1.5;
 }
@@ -686,6 +686,10 @@
 .rdpRangeEnd .rdpDayButton {
   border-top-right-radius: 10px;
   border-bottom-right-radius: 10px;
+}
+
+.rdpRangeStart.rdpRangeEnd .rdpDayButton {
+  border-radius: 10px;
 }
 
 /* ─── VEHICLE CARD RESTRUCTURE ─────────────────────── */

@@ -16,6 +16,7 @@
   --glass-strong: rgba(241, 241, 241, 0.96);
   --border: rgba(1, 35, 105, 0.14);
   --border-accent: rgba(175, 226, 58, 0.58);
+  --error: #c0392b;
 
   --font-display: 'Bebas Neue', sans-serif;
   --font-body: 'Inter', sans-serif;
