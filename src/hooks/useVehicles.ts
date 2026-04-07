@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { api } from '../lib/api';
+import { useMemo } from 'react';
+import { vehicles as staticVehicles } from '../data/vehicles';
 
 export type ApiVehicle = {
   id: string;
@@ -11,6 +11,8 @@ export type ApiVehicle = {
   imageUrl: string;
   fuelType: string;
   transmissionType: string;
+  power: string;
+  highlight: string;
   office: { slug: string; city: string };
 };
 
@@ -21,28 +23,41 @@ type Params = {
   category?: string;
 };
 
+const API_TO_STATIC_CATEGORY: Record<string, string> = {
+  TURISMOS: 'Turismos',
+  FURGONETAS: 'Furgonetas',
+  SUV_4X4: '4x4',
+  AUTOCARAVANAS: 'Autocaravanas',
+};
+
 export function useVehicles(params: Params | null) {
-  const [vehicles, setVehicles] = useState<ApiVehicle[] | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const vehicles = useMemo(() => {
+    if (!params) return null;
 
-  useEffect(() => {
-    if (!params) return;
+    const staticCategory = params.category
+      ? API_TO_STATIC_CATEGORY[params.category]
+      : null;
 
-    const { officeSlug, startDate, endDate, category } = params;
-    const qs = new URLSearchParams({ officeSlug, startDate, endDate });
-    if (category) qs.set('category', category);
+    const filtered = staticCategory
+      ? staticVehicles.filter((v) => v.category === staticCategory)
+      : staticVehicles;
 
-    setLoading(true);
-    setError(null);
-
-    api
-      .get<ApiVehicle[]>(`/api/vehicles?${qs.toString()}`)
-      .then(setVehicles)
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false));
+    return filtered.map((v) => ({
+      id: v.id,
+      model: v.name,
+      brand: v.brand,
+      category: v.category,
+      seats: v.seats,
+      dailyRate: String(v.dailyRate),
+      imageUrl: v.image,
+      fuelType: v.fuel,
+      transmissionType: v.transmission,
+      power: v.power,
+      highlight: v.highlight,
+      office: { slug: params.officeSlug, city: params.officeSlug },
+    })) as ApiVehicle[];
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params?.officeSlug, params?.startDate, params?.endDate, params?.category]);
 
-  return { vehicles, loading, error };
+  return { vehicles, loading: false, error: null };
 }
