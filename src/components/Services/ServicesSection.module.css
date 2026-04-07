@@ -1,5 +1,6 @@
 .section {
-  padding: var(--section-pad) 0;
+  padding-top: clamp(12px, 2vw, 28px);
+  padding-bottom: var(--section-pad);
 }
 
 .wrapper {

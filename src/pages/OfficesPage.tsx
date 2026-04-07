@@ -132,7 +132,7 @@ export default function OfficesPage() {
             <MapContainer center={activeOffice.coords} zoom={14} scrollWheelZoom={false} className={styles.map}>
               <MapController coords={activeOffice.coords} />
               <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
                 attribution="&copy; OpenStreetMap contributors &copy; CARTO"
               />
 

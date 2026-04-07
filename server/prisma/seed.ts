@@ -67,7 +67,7 @@ const officesData = [
   {
     slug: 'soria',
     city: 'Soria',
-    address: 'Paseo del Espolón, 20, 42001 Soria',
+    address: 'Alcotrans | Transporte de áridos, N-122, 105, 42100 Ágreda, Soria',
     phone: '+34 975 345 678',
     email: 'soria@alocars.es',
     hours: 'Lun–Vie 09:00–18:30',
