@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
-import { format } from 'date-fns';
+import { format, startOfToday } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { gsap } from 'gsap';
-import type { DateRange } from 'react-day-picker';
+import { DayPicker, type ClassNames, type DateRange } from 'react-day-picker';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useVehicles } from '../hooks/useVehicles';
@@ -41,6 +41,9 @@ const CATEGORY_MAP: Record<string, string> = {
   '4×4': 'SUV_4X4',
   Autocaravanas: 'AUTOCARAVANAS',
 };
+
+const LOCATIONS = ['Zaragoza', 'Tudela', 'Soria'] as const;
+const VEHICLE_TYPES = ['Cualquier tipo', 'Turismos', 'Furgonetas', '4×4', 'Autocaravanas'] as const;
 
 const initialCustomerData: CustomerData = {
   nombre: '',
@@ -83,22 +86,24 @@ export default function CheckoutPage() {
   const [confirmationCode, setConfirmationCode] = useState<string | null>(null);
 
   const bookingState = state as CheckoutState | null;
-  const pickupLocation = bookingState?.location;
-  const selectedVehicleType = bookingState?.vehicleType;
-  const selectedDateRange = bookingState?.dateRange;
 
   const hasSearchState = Boolean(
-    bookingState && pickupLocation && selectedVehicleType && selectedDateRange?.from,
+    bookingState?.location && bookingState?.vehicleType && bookingState?.dateRange?.from,
   );
 
-  const officeSlug = pickupLocation?.toLowerCase() ?? '';
-  const apiCategory = selectedVehicleType ? CATEGORY_MAP[selectedVehicleType] : undefined;
-  const startDateStr = selectedDateRange?.from ? format(selectedDateRange.from, 'yyyy-MM-dd') : '';
-  const endDateStr = selectedDateRange?.to
-    ? format(selectedDateRange.to, 'yyyy-MM-dd')
-    : startDateStr;
+  // Editable search params — initialised from router state
+  const [editLocation, setEditLocation] = useState<string>(bookingState?.location ?? 'Zaragoza');
+  const [editDateRange, setEditDateRange] = useState<DateRange | undefined>(bookingState?.dateRange);
+  const [editVehicleType, setEditVehicleType] = useState<string>(bookingState?.vehicleType ?? 'Cualquier tipo');
+  const [openSummaryDropdown, setOpenSummaryDropdown] = useState<'location' | 'category' | null>(null);
+  const [isSummaryDateOpen, setIsSummaryDateOpen] = useState(false);
 
-  const vehicleParams = hasSearchState && startDateStr && endDateStr
+  const officeSlug = editLocation.toLowerCase();
+  const apiCategory = editVehicleType !== 'Cualquier tipo' ? CATEGORY_MAP[editVehicleType] : undefined;
+  const startDateStr = editDateRange?.from ? format(editDateRange.from, 'yyyy-MM-dd') : '';
+  const endDateStr = editDateRange?.to ? format(editDateRange.to, 'yyyy-MM-dd') : startDateStr;
+
+  const vehicleParams = hasSearchState && startDateStr
     ? { officeSlug, startDate: startDateStr, endDate: endDateStr, category: apiCategory }
     : null;
 
@@ -112,8 +117,8 @@ export default function CheckoutPage() {
   }, [vehicles, selectedVehicleId]);
 
   const formattedDates = useMemo(
-    () => formatDateRangeLabel(selectedDateRange),
-    [selectedDateRange],
+    () => formatDateRangeLabel(editDateRange),
+    [editDateRange],
   );
 
   useEffect(() => {
@@ -123,21 +128,74 @@ export default function CheckoutPage() {
       if (summaryRef.current) {
         gsap.fromTo(
           summaryRef.current,
-          { x: -56, autoAlpha: 0 },
-          { x: 0, autoAlpha: 1, duration: 0.9, ease: 'power3.out' },
+          { y: 28, autoAlpha: 0 },
+          { y: 0, autoAlpha: 1, duration: 0.75, ease: 'power3.out' },
         );
       }
       if (formRef.current) {
         gsap.fromTo(
           formRef.current,
-          { x: 56, autoAlpha: 0 },
-          { x: 0, autoAlpha: 1, duration: 0.9, ease: 'power3.out', delay: 0.08 },
+          { y: 28, autoAlpha: 0 },
+          { y: 0, autoAlpha: 1, duration: 0.75, ease: 'power3.out', delay: 0.12 },
         );
       }
     }, pageRef);
 
     return () => ctx.revert();
   }, [hasSearchState]);
+
+  useEffect(() => {
+    if (!isSummaryDateOpen && !openSummaryDropdown) return;
+
+    const handleOutside = (e: MouseEvent) => {
+      if (!(e.target instanceof Element)) return;
+      if (e.target.closest('[data-summary-select]') || e.target.closest('[data-summary-date]')) return;
+      setOpenSummaryDropdown(null);
+      setIsSummaryDateOpen(false);
+    };
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpenSummaryDropdown(null);
+        setIsSummaryDateOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleOutside);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [isSummaryDateOpen, openSummaryDropdown]);
+
+  const handleEditLocation = (loc: string) => {
+    setEditLocation(loc);
+    setSelectedVehicleId(null);
+    setOpenSummaryDropdown(null);
+  };
+
+  const handleEditVehicleType = (type: string) => {
+    setEditVehicleType(type);
+    setSelectedVehicleId(null);
+    setOpenSummaryDropdown(null);
+  };
+
+  const handleEditDateRange = (range: DateRange | undefined) => {
+    setEditDateRange(range);
+    if (range?.from && range?.to) {
+      setSelectedVehicleId(null);
+      setIsSummaryDateOpen(false);
+    }
+  };
+
+  const toggleSummaryDropdown = (key: 'location' | 'category') => {
+    setIsSummaryDateOpen(false);
+    setOpenSummaryDropdown((prev) => (prev === key ? null : key));
+  };
+
+  const toggleSummaryDate = () => {
+    setOpenSummaryDropdown(null);
+    setIsSummaryDateOpen((prev) => !prev);
+  };
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -190,6 +248,32 @@ export default function CheckoutPage() {
     }
   };
 
+  const summaryDayPickerClassNames: Partial<ClassNames> = {
+    root: styles.rdpRoot,
+    months: styles.rdpMonths,
+    month: styles.rdpMonth,
+    month_caption: styles.rdpMonthCaption,
+    caption_label: styles.rdpCaptionLabel,
+    nav: styles.rdpNav,
+    button_previous: styles.rdpNavButton,
+    button_next: styles.rdpNavButton,
+    chevron: styles.rdpChevron,
+    month_grid: styles.rdpMonthGrid,
+    weekdays: styles.rdpWeekdays,
+    weekday: styles.rdpWeekday,
+    weeks: styles.rdpWeeks,
+    week: styles.rdpWeek,
+    day: styles.rdpDay,
+    day_button: styles.rdpDayButton,
+    disabled: styles.rdpDayDisabled,
+    outside: styles.rdpDayOutside,
+    today: styles.rdpDayToday,
+    selected: styles.rdpDaySelected,
+    range_start: styles.rdpRangeStart,
+    range_middle: styles.rdpRangeMiddle,
+    range_end: styles.rdpRangeEnd,
+  };
+
   if (!hasSearchState) {
     return (
       <main className={styles.emptyPage}>
@@ -238,17 +322,137 @@ export default function CheckoutPage() {
           <h1 className={styles.title}>CHECKOUT</h1>
 
           <article className={styles.summaryCard}>
+            {/* Fechas */}
             <div className={styles.summaryRow}>
               <span className={styles.summaryLabel}>Fechas</span>
-              <strong className={styles.summaryValue}>{formattedDates}</strong>
+              <div className={styles.summaryControl} data-summary-date>
+                <button
+                  type="button"
+                  className={styles.summaryDateTrigger}
+                  aria-expanded={isSummaryDateOpen}
+                  onClick={toggleSummaryDate}
+                >
+                  <span>{formattedDates}</span>
+                  <svg
+                    className={`${styles.summaryChevron} ${isSummaryDateOpen ? styles.summaryChevronOpen : ''}`}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+                {isSummaryDateOpen && (
+                  <div className={styles.summaryDatePopover} role="dialog" aria-label="Seleccionar fechas">
+                    <DayPicker
+                      mode="range"
+                      locale={es}
+                      weekStartsOn={1}
+                      numberOfMonths={1}
+                      pagedNavigation
+                      showOutsideDays
+                      fixedWeeks
+                      selected={editDateRange}
+                      onSelect={handleEditDateRange}
+                      disabled={{ before: startOfToday() }}
+                      defaultMonth={editDateRange?.from ?? startOfToday()}
+                      classNames={summaryDayPickerClassNames}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
+
+            {/* Recogida */}
             <div className={styles.summaryRow}>
               <span className={styles.summaryLabel}>Recogida</span>
-              <strong className={styles.summaryValue}>{pickupLocation}</strong>
+              <div className={styles.summaryControl} data-summary-select>
+                <button
+                  type="button"
+                  className={styles.summarySelectTrigger}
+                  aria-expanded={openSummaryDropdown === 'location'}
+                  onClick={() => toggleSummaryDropdown('location')}
+                >
+                  <span>{editLocation}</span>
+                  <svg
+                    className={`${styles.summaryChevron} ${openSummaryDropdown === 'location' ? styles.summaryChevronOpen : ''}`}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+                {openSummaryDropdown === 'location' && (
+                  <ul className={styles.summaryDropdownMenu} role="listbox" aria-label="Ciudades de recogida">
+                    {LOCATIONS.map((city) => (
+                      <li key={city}>
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={editLocation === city}
+                          className={`${styles.summaryDropdownItem} ${editLocation === city ? styles.summaryDropdownItemActive : ''}`}
+                          onClick={() => handleEditLocation(city)}
+                        >
+                          {city}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
+
+            {/* Categoría */}
             <div className={styles.summaryRow}>
               <span className={styles.summaryLabel}>Categoría</span>
-              <strong className={styles.summaryValue}>{selectedVehicleType}</strong>
+              <div className={styles.summaryControl} data-summary-select>
+                <button
+                  type="button"
+                  className={styles.summarySelectTrigger}
+                  aria-expanded={openSummaryDropdown === 'category'}
+                  onClick={() => toggleSummaryDropdown('category')}
+                >
+                  <span>{editVehicleType}</span>
+                  <svg
+                    className={`${styles.summaryChevron} ${openSummaryDropdown === 'category' ? styles.summaryChevronOpen : ''}`}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+                {openSummaryDropdown === 'category' && (
+                  <ul className={styles.summaryDropdownMenu} role="listbox" aria-label="Categorías de vehículo">
+                    {VEHICLE_TYPES.map((type) => (
+                      <li key={type}>
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={editVehicleType === type}
+                          className={`${styles.summaryDropdownItem} ${editVehicleType === type ? styles.summaryDropdownItemActive : ''}`}
+                          onClick={() => handleEditVehicleType(type)}
+                        >
+                          {type}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           </article>
 
