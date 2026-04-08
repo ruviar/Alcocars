@@ -20,10 +20,11 @@ export async function buildApp() {
     },
   });
 
-  // CORS — allow the Vite dev server and production frontend origin
+  // CORS — origins from CORS_ORIGIN env var (comma-separated list)
   await app.register(cors, {
     origin: env.CORS_ORIGIN,
-    methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    credentials: true,
   });
 
   // JWT — decorates request.jwtVerify() and app.jwt.sign()

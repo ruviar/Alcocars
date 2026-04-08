@@ -1,13 +1,16 @@
 import { z } from 'zod';
 
+const checkoutExtraSchema = z.object({
+  key: z.enum(['BABY_SEAT', 'SNOW_CHAINS', 'ADDITIONAL_DRIVER']),
+  quantity: z.number().int().min(1),
+});
+
 export const checkoutBodySchema = z.object({
   vehicleId: z.string().min(1),
   officeSlug: z.string().min(1),
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD'),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD'),
-  extras: z
-    .array(z.enum(['BABY_SEAT', 'SNOW_CHAINS', 'ADDITIONAL_DRIVER']))
-    .default([]),
+  extras: z.array(checkoutExtraSchema).default([]),
   client: z.object({
     firstName: z.string().min(1),
     lastName: z.string().min(1),
@@ -18,3 +21,4 @@ export const checkoutBodySchema = z.object({
 });
 
 export type CheckoutBody = z.infer<typeof checkoutBodySchema>;
+export type CheckoutExtra = z.infer<typeof checkoutExtraSchema>;

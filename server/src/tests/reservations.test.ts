@@ -15,7 +15,7 @@ const validInput = {
   officeSlug: 'zaragoza',
   startDate: new Date('2026-05-01'),
   endDate: new Date('2026-05-05'),
-  extras: [] as any[],
+  extras: [] as Array<{ key: 'BABY_SEAT' | 'SNOW_CHAINS' | 'ADDITIONAL_DRIVER'; quantity: number }>,
   client: { firstName: 'Ana', lastName: 'García', email: 'ana@test.es', phone: '+34600000001' },
 };
 
@@ -33,13 +33,13 @@ describe('processCheckout', () => {
   });
 
   it('throws VEHICLE_NOT_AVAILABLE when overlap reservation exists', async () => {
-    tx.vehicle.findFirst.mockResolvedValue({ id: 'v1', dailyRate: 89 });
+    tx.vehicle.findFirst.mockResolvedValue({ id: 'v1', dailyRate: 89, seats: 5 });
     tx.reservation.findFirst.mockResolvedValue({ id: 'conflict' });
     await expect(processCheckout(validInput)).rejects.toThrow('VEHICLE_NOT_AVAILABLE');
   });
 
   it('creates reservation and returns confirmation when available', async () => {
-    tx.vehicle.findFirst.mockResolvedValue({ id: 'v1', dailyRate: '89' });
+    tx.vehicle.findFirst.mockResolvedValue({ id: 'v1', dailyRate: '89', seats: 5 });
     tx.reservation.findFirst.mockResolvedValue(null);
     tx.office.findUnique.mockResolvedValue({ id: 'office1' });
     tx.client.upsert.mockResolvedValue({ id: 'client1' });
@@ -55,6 +55,46 @@ describe('processCheckout', () => {
     expect(result.confirmationCode).toBe('ALC-TESTCODE');
     expect(result.reservationId).toBe('res1');
     expect(tx.reservation.create).toHaveBeenCalledOnce();
+  });
+
+  it('multiplies extra total by quantity and rental days', async () => {
+    tx.vehicle.findFirst.mockResolvedValue({ id: 'v1', dailyRate: '89', seats: 5 });
+    tx.reservation.findFirst.mockResolvedValue(null);
+    tx.office.findUnique.mockResolvedValue({ id: 'office1' });
+    tx.client.upsert.mockResolvedValue({ id: 'client1' });
+    tx.reservation.create.mockResolvedValue({
+      id: 'res1',
+      confirmationCode: 'ALC-TESTCODE',
+      totalAmount: '420.00',
+      extras: [],
+    });
+
+    await processCheckout({
+      ...validInput,
+      extras: [{ key: 'BABY_SEAT', quantity: 2 }],
+    });
+
+    const createArgs = tx.reservation.create.mock.calls[0][0];
+    expect(createArgs.data.extrasTotal).toBe(64);
+    expect(createArgs.data.extras.create).toEqual([
+      {
+        type: 'BABY_SEAT',
+        quantity: 2,
+        pricePerDay: 8,
+        totalPrice: 64,
+      },
+    ]);
+  });
+
+  it('throws INVALID_BABY_SEAT_QUANTITY when quantity exceeds available seats', async () => {
+    tx.vehicle.findFirst.mockResolvedValue({ id: 'v1', dailyRate: '89', seats: 4 });
+
+    await expect(
+      processCheckout({
+        ...validInput,
+        extras: [{ key: 'BABY_SEAT', quantity: 4 }],
+      }),
+    ).rejects.toThrow('INVALID_BABY_SEAT_QUANTITY');
   });
 
   it('throws INVALID_DATE_RANGE when endDate is before startDate', async () => {

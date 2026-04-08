@@ -124,8 +124,9 @@
 .rowTop {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: flex-start;
   gap: 10px;
+  min-height: 40px;
 }
 
 .brand {
@@ -140,6 +141,7 @@
   font-size: 14px;
   color: var(--accent-dim);
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .rate span {

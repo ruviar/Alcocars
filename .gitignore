@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Local env overrides (may contain real secrets — never commit)
+.env.local
+.env.*.local
+server/.local-postgres/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

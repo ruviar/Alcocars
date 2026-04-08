@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type MouseEvent as ReactMouseEvent } from 'react';
 import { format, startOfToday } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { gsap } from 'gsap';
 import { DayPicker, type ClassNames, type DateRange } from 'react-day-picker';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
-import { useVehicles } from '../hooks/useVehicles';
+import { useVehicles, type ApiVehicle } from '../hooks/useVehicles';
 import styles from './CheckoutPage.module.css';
 
 type CheckoutState = {
@@ -14,7 +14,8 @@ type CheckoutState = {
   vehicleType?: string;
 };
 
-type ExtraKey = 'babySeat' | 'snowChains' | 'additionalDriver';
+type ToggleExtraKey = 'snowChains' | 'additionalDriver';
+type CheckoutExtraKey = 'BABY_SEAT' | 'SNOW_CHAINS' | 'ADDITIONAL_DRIVER';
 
 type CustomerData = {
   nombre: string;
@@ -23,14 +24,12 @@ type CustomerData = {
   email: string;
 };
 
-const EXTRAS_CONFIG: Array<{ key: ExtraKey; label: string }> = [
-  { key: 'babySeat', label: 'Silla de bebé' },
+const EXTRAS_CONFIG: Array<{ key: ToggleExtraKey; label: string }> = [
   { key: 'snowChains', label: 'Cadenas de nieve' },
   { key: 'additionalDriver', label: 'Conductor adicional' },
 ];
 
-const EXTRAS_API_MAP: Record<ExtraKey, 'BABY_SEAT' | 'SNOW_CHAINS' | 'ADDITIONAL_DRIVER'> = {
-  babySeat: 'BABY_SEAT',
+const EXTRAS_API_MAP: Record<ToggleExtraKey, CheckoutExtraKey> = {
   snowChains: 'SNOW_CHAINS',
   additionalDriver: 'ADDITIONAL_DRIVER',
 };
@@ -52,8 +51,7 @@ const initialCustomerData: CustomerData = {
   email: '',
 };
 
-const initialExtrasState: Record<ExtraKey, boolean> = {
-  babySeat: false,
+const initialExtrasState: Record<ToggleExtraKey, boolean> = {
   snowChains: false,
   additionalDriver: false,
 };
@@ -77,10 +75,13 @@ export default function CheckoutPage() {
   const pageRef = useRef<HTMLElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
+  const vehicleDialogRef = useRef<HTMLDialogElement>(null);
 
   const [customerData, setCustomerData] = useState<CustomerData>(initialCustomerData);
-  const [extras, setExtras] = useState<Record<ExtraKey, boolean>>(initialExtrasState);
+  const [extras, setExtras] = useState<Record<ToggleExtraKey, boolean>>(initialExtrasState);
+  const [babySeatQty, setBabySeatQty] = useState(0);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
+  const [detailVehicleId, setDetailVehicleId] = useState<ApiVehicle['id'] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [confirmationCode, setConfirmationCode] = useState<string | null>(null);
@@ -109,12 +110,39 @@ export default function CheckoutPage() {
 
   const { vehicles, loading: vehiclesLoading, error: vehiclesError } = useVehicles(vehicleParams);
 
+  const selectedVehicle = useMemo(
+    () => vehicles?.find((vehicle) => vehicle.id === selectedVehicleId) ?? null,
+    [vehicles, selectedVehicleId],
+  );
+
+  const detailVehicle = useMemo(
+    () => vehicles?.find((vehicle) => vehicle.id === detailVehicleId) ?? null,
+    [vehicles, detailVehicleId],
+  );
+
+  const maxBabySeats = selectedVehicle ? Math.max(selectedVehicle.seats - 1, 0) : 0;
+  const isBabySeatDisabled = !selectedVehicle;
+
   // Auto-select first vehicle when list loads
   useEffect(() => {
     if (vehicles && vehicles.length > 0 && !selectedVehicleId) {
       setSelectedVehicleId(vehicles[0].id);
     }
   }, [vehicles, selectedVehicleId]);
+
+  useEffect(() => {
+    if (!selectedVehicle) {
+      setBabySeatQty(0);
+      return;
+    }
+    setBabySeatQty((prev) => Math.min(prev, maxBabySeats));
+  }, [selectedVehicle, maxBabySeats]);
+
+  useEffect(() => {
+    if (!detailVehicleId || detailVehicle) return;
+    vehicleDialogRef.current?.close();
+    setDetailVehicleId(null);
+  }, [detailVehicleId, detailVehicle]);
 
   const formattedDates = useMemo(
     () => formatDateRangeLabel(editDateRange),
@@ -203,8 +231,39 @@ export default function CheckoutPage() {
     if (submitError) setSubmitError(null);
   };
 
-  const handleExtraToggle = (key: ExtraKey) => {
+  const handleExtraToggle = (key: ToggleExtraKey) => {
     setExtras((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleDecreaseBabySeatQty = () => {
+    setBabySeatQty((prev) => Math.max(prev - 1, 0));
+  };
+
+  const handleIncreaseBabySeatQty = () => {
+    setBabySeatQty((prev) => Math.min(prev + 1, maxBabySeats));
+  };
+
+  const handleOpenVehicleDetails = (vehicle: ApiVehicle) => {
+    setDetailVehicleId(vehicle.id);
+    if (!vehicleDialogRef.current?.open) {
+      vehicleDialogRef.current?.showModal();
+    }
+  };
+
+  const handleCloseVehicleDetails = () => {
+    vehicleDialogRef.current?.close();
+    setDetailVehicleId(null);
+  };
+
+  const handleVehicleDialogBackdropClick = (event: ReactMouseEvent<HTMLDialogElement>) => {
+    if (event.target === event.currentTarget) {
+      handleCloseVehicleDetails();
+    }
+  };
+
+  const handleSelectVehicleFromDialog = (vehicle: ApiVehicle) => {
+    setSelectedVehicleId(vehicle.id);
+    handleCloseVehicleDetails();
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -214,9 +273,13 @@ export default function CheckoutPage() {
     setIsLoading(true);
     setSubmitError(null);
 
-    const selectedExtras = (Object.keys(extras) as ExtraKey[])
+    const selectedExtras = (Object.keys(extras) as ToggleExtraKey[])
       .filter((k) => extras[k])
-      .map((k) => EXTRAS_API_MAP[k]);
+      .map((k) => ({ key: EXTRAS_API_MAP[k], quantity: 1 }));
+
+    if (babySeatQty > 0) {
+      selectedExtras.unshift({ key: 'BABY_SEAT', quantity: babySeatQty });
+    }
 
     try {
       const result = await api.post<{ confirmationCode: string; reservationId: string }>(
@@ -470,21 +533,30 @@ export default function CheckoutPage() {
             {vehicles && vehicles.length > 0 && (
               <div className={styles.vehicleList}>
                 {vehicles.map((v) => (
-                  <label
+                  <div
                     key={v.id}
                     className={`${styles.vehicleItem} ${selectedVehicleId === v.id ? styles.vehicleItemSelected : ''}`}
                   >
-                    <input
-                      type="radio"
-                      name="vehicleId"
-                      value={v.id}
-                      checked={selectedVehicleId === v.id}
-                      onChange={() => setSelectedVehicleId(v.id)}
-                      className={styles.vehicleRadio}
-                    />
-                    <span className={styles.vehicleName}>{v.brand} {v.model}</span>
-                    <span className={styles.vehicleRate}>€{Number(v.dailyRate).toFixed(0)}/día</span>
-                  </label>
+                    <label className={styles.vehicleSelectLabel}>
+                      <input
+                        type="radio"
+                        name="vehicleId"
+                        value={v.id}
+                        checked={selectedVehicleId === v.id}
+                        onChange={() => setSelectedVehicleId(v.id)}
+                        className={styles.vehicleRadio}
+                      />
+                      <span className={styles.vehicleName}>{v.brand} {v.model}</span>
+                      <span className={styles.vehicleRate}>€{Number(v.dailyRate).toFixed(0)}/día</span>
+                    </label>
+                    <button
+                      type="button"
+                      className={styles.vehicleDetailsBtn}
+                      onClick={() => handleOpenVehicleDetails(v)}
+                    >
+                      Ver detalles
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -494,6 +566,38 @@ export default function CheckoutPage() {
             <h2 className={styles.extrasTitle}>Extras</h2>
             <p className={styles.extrasText}>Añade complementos para que el viaje se adapte a ti.</p>
             <div className={styles.extrasList}>
+              <div className={styles.extraItem}>
+                <div className={styles.babySeatLeft}>
+                  <span className={styles.extraLabel}>Silla de bebé</span>
+                  <span className={styles.babySeatHint}>
+                    {selectedVehicle
+                      ? `Máximo ${maxBabySeats} silla${maxBabySeats === 1 ? '' : 's'} para este vehículo`
+                      : 'Selecciona un vehículo para habilitar este extra'}
+                  </span>
+                </div>
+                <div className={styles.babySeatCounter} aria-live="polite">
+                  <button
+                    type="button"
+                    className={styles.babySeatBtn}
+                    onClick={handleDecreaseBabySeatQty}
+                    disabled={isBabySeatDisabled || babySeatQty === 0}
+                    aria-label="Reducir sillas de bebé"
+                  >
+                    -
+                  </button>
+                  <span className={styles.babySeatQtyNum}>{babySeatQty}</span>
+                  <button
+                    type="button"
+                    className={styles.babySeatBtn}
+                    onClick={handleIncreaseBabySeatQty}
+                    disabled={isBabySeatDisabled || babySeatQty >= maxBabySeats}
+                    aria-label="Aumentar sillas de bebé"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
               {EXTRAS_CONFIG.map((extra) => (
                 <label key={extra.key} className={styles.extraItem}>
                   <span className={styles.extraLabel}>{extra.label}</span>
@@ -510,6 +614,72 @@ export default function CheckoutPage() {
               ))}
             </div>
           </article>
+
+          <dialog
+            ref={vehicleDialogRef}
+            className={styles.vehicleModal}
+            onClick={handleVehicleDialogBackdropClick}
+            onClose={() => setDetailVehicleId(null)}
+          >
+            {detailVehicle && (
+              <>
+                <button
+                  type="button"
+                  className={styles.vehicleModalClose}
+                  onClick={handleCloseVehicleDetails}
+                  aria-label="Cerrar detalles del vehículo"
+                >
+                  ×
+                </button>
+                <img
+                  src={detailVehicle.imageUrl}
+                  alt={`${detailVehicle.brand} ${detailVehicle.model}`}
+                  className={styles.vehicleModalImage}
+                />
+                <div className={styles.vehicleModalBody}>
+                  <header className={styles.vehicleModalHeader}>
+                    <h3 className={styles.vehicleModalTitle}>{detailVehicle.brand} {detailVehicle.model}</h3>
+                    <p className={styles.vehicleModalBadge}>{detailVehicle.highlight}</p>
+                  </header>
+
+                  <ul className={styles.vehicleModalSpecs}>
+                    <li className={styles.vehicleModalSpecItem}>
+                      <span className={styles.vehicleModalSpecLabel}>Potencia</span>
+                      <span className={styles.vehicleModalSpecValue}>{detailVehicle.power}</span>
+                    </li>
+                    <li className={styles.vehicleModalSpecItem}>
+                      <span className={styles.vehicleModalSpecLabel}>Plazas</span>
+                      <span className={styles.vehicleModalSpecValue}>{detailVehicle.seats}</span>
+                    </li>
+                    <li className={styles.vehicleModalSpecItem}>
+                      <span className={styles.vehicleModalSpecLabel}>Combustible</span>
+                      <span className={styles.vehicleModalSpecValue}>{detailVehicle.fuelType}</span>
+                    </li>
+                    <li className={styles.vehicleModalSpecItem}>
+                      <span className={styles.vehicleModalSpecLabel}>Transmisión</span>
+                      <span className={styles.vehicleModalSpecValue}>{detailVehicle.transmissionType}</span>
+                    </li>
+                    <li className={styles.vehicleModalSpecItem}>
+                      <span className={styles.vehicleModalSpecLabel}>Descripción</span>
+                      <span className={styles.vehicleModalSpecValue}>{detailVehicle.highlight}</span>
+                    </li>
+                    <li className={styles.vehicleModalSpecItem}>
+                      <span className={styles.vehicleModalSpecLabel}>Precio diario</span>
+                      <span className={styles.vehicleModalSpecValue}>€{Number(detailVehicle.dailyRate).toFixed(0)}/día</span>
+                    </li>
+                  </ul>
+
+                  <button
+                    type="button"
+                    className={styles.vehicleModalSelectBtn}
+                    onClick={() => handleSelectVehicleFromDialog(detailVehicle)}
+                  >
+                    {selectedVehicleId === detailVehicle.id ? 'Vehículo seleccionado' : 'Seleccionar este vehículo'}
+                  </button>
+                </div>
+              </>
+            )}
+          </dialog>
         </section>
 
         <section ref={formRef} className={styles.formColumn} aria-label="Tus datos de reserva">

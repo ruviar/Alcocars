@@ -610,6 +610,10 @@
   border-collapse: collapse;
 }
 
+.rdpWeekdays {
+  border-bottom: 1px solid rgba(1, 35, 105, 0.08);
+}
+
 .rdpWeekday {
   font-size: 11px;
   font-weight: 600;
@@ -622,6 +626,14 @@
 .rdpDay {
   padding: 0;
   text-align: center;
+}
+
+.rdpWeeks {
+  padding-top: 6px;
+}
+
+.rdpWeek {
+  border-collapse: collapse;
 }
 
 .rdpDayButton {
@@ -906,4 +918,10 @@
   font-weight: 700;
   color: var(--chalk);
   font-family: var(--font-mono);
+}
+
+@media (max-width: 720px) {
+  .vehicleModalSpecs {
+    grid-template-columns: 1fr;
+  }
 }

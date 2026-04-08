@@ -3,8 +3,10 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // directUrl bypasses the connection pooler for Prisma migrations (required by Supabase pgbouncer)
+  directUrl = env("DIRECT_URL")
 }
 
 enum VehicleCategory {
@@ -129,6 +131,7 @@ model ReservationExtra {
   reservationId String
   reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
   type          ExtraType
+  quantity      Int         @default(1)
   pricePerDay   Decimal     @db.Decimal(10, 2)
   totalPrice    Decimal     @db.Decimal(10, 2)
 

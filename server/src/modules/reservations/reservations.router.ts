@@ -24,6 +24,12 @@ export async function reservationsRouter(app: FastifyInstance) {
       });
       return reply.status(201).send(result);
     } catch (err: any) {
+      if (err.message === 'INVALID_DATE_RANGE') {
+        return reply.status(422).send({ error: 'INVALID_DATE_RANGE' });
+      }
+      if (err.message === 'INVALID_BABY_SEAT_QUANTITY') {
+        return reply.status(422).send({ error: 'INVALID_BABY_SEAT_QUANTITY' });
+      }
       if (err.message === 'VEHICLE_NOT_AVAILABLE') {
         return reply.status(409).send({ error: 'VEHICLE_NOT_AVAILABLE' });
       }

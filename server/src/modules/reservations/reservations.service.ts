@@ -14,11 +14,16 @@ export async function processCheckout(input: {
   officeSlug: string;
   startDate: Date;
   endDate: Date;
-  extras: ExtraType[];
+  extras: Array<{ key: ExtraType; quantity: number }>;
   client: { firstName: string; lastName: string; email: string; phone: string };
   notes?: string;
 }) {
   const { vehicleId, officeSlug, startDate, endDate, extras, client, notes } = input;
+
+  const extrasByType = extras.reduce((acc, extra) => {
+    acc[extra.key] = (acc[extra.key] ?? 0) + extra.quantity;
+    return acc;
+  }, {} as Partial<Record<ExtraType, number>>);
 
   const totalDays = Math.round(
     (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
@@ -32,6 +37,11 @@ export async function processCheckout(input: {
         where: { id: vehicleId, isActive: true },
       });
       if (!vehicle) throw new Error('VEHICLE_NOT_FOUND');
+
+      const maxBabySeats = Math.max(vehicle.seats - 1, 0);
+      if ((extrasByType.BABY_SEAT ?? 0) > maxBabySeats) {
+        throw new Error('INVALID_BABY_SEAT_QUANTITY');
+      }
 
       // 2. Check for any overlapping non-cancelled reservation
       //    Half-open interval: [startDate, endDate)
@@ -63,9 +73,15 @@ export async function processCheckout(input: {
 
       // 5. Compute pricing
       const dailyRate = Number(vehicle.dailyRate);
-      const extrasData = extras.map((type) => {
+      const extrasData = (Object.keys(extrasByType) as ExtraType[]).map((type) => {
+        const quantity = extrasByType[type] ?? 0;
         const pricePerDay = EXTRAS_PRICING[type];
-        return { type, pricePerDay, totalPrice: pricePerDay * totalDays };
+        return {
+          type,
+          quantity,
+          pricePerDay,
+          totalPrice: pricePerDay * quantity * totalDays,
+        };
       });
       const extrasTotal = extrasData.reduce((sum, e) => sum + e.totalPrice, 0);
       const totalAmount = dailyRate * totalDays + extrasTotal;

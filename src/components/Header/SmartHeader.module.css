@@ -68,13 +68,6 @@
   color: var(--chalk);
 }
 
-.navChevron {
-  width: 14px;
-  height: 14px;
-  color: var(--chalk);
-  opacity: 0.88;
-}
-
 .cta {
   display: inline-flex;
   align-items: center;
