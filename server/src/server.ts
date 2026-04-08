@@ -55,11 +55,14 @@ export async function buildApp() {
 // Only start server when run directly (not when imported by tests)
 if (require.main === module) {
   buildApp().then((app) => {
-    app.listen({ port: env.PORT, host: '0.0.0.0' }, (err) => {
+    const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
+
+    app.listen({ port: PORT, host: '0.0.0.0' }, (err, address) => {
       if (err) {
-        app.log.error(err);
+        console.error('Error arrancando el servidor:', err);
         process.exit(1);
       }
+      console.log(`Servidor escuchando en ${address}`);
     });
   });
 }
