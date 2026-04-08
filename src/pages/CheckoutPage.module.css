@@ -41,6 +41,8 @@
 }
 
 .summaryCard {
+  position: relative;
+  z-index: 8;
   display: grid;
   gap: 6px;
   padding: clamp(22px, 3vw, 30px);
@@ -505,7 +507,7 @@
   border-radius: var(--radius-md);
   padding: 8px;
   list-style: none;
-  z-index: 40;
+  z-index: 60;
   box-shadow: 0 12px 32px rgba(1, 35, 105, 0.14);
   animation: summaryDropDown 0.18s ease-out forwards;
 }
@@ -538,7 +540,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 14px;
-  z-index: 40;
+  z-index: 60;
   box-shadow: 0 18px 46px rgba(1, 35, 105, 0.15);
   animation: summaryDropDown 0.18s ease-out forwards;
 }
