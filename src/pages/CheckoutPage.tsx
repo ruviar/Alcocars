@@ -108,7 +108,7 @@ export default function CheckoutPage() {
     ? { officeSlug, startDate: startDateStr, endDate: endDateStr, category: apiCategory }
     : null;
 
-  const { vehicles, loading: vehiclesLoading, error: vehiclesError } = useVehicles(vehicleParams);
+  const { vehicles, isLoading: vehiclesLoading, error: vehiclesError } = useVehicles(vehicleParams);
 
   const selectedVehicle = useMemo(
     () => vehicles?.find((vehicle) => vehicle.id === selectedVehicleId) ?? null,
@@ -522,7 +522,10 @@ export default function CheckoutPage() {
           <article className={styles.vehiclesCard}>
             <h2 className={styles.extrasTitle}>Elige tu vehículo</h2>
             {vehiclesLoading && (
-              <p className={styles.extrasText}>Buscando disponibilidad...</p>
+              <p className={styles.vehicleLoading}>
+                <span className={styles.spinner} aria-hidden="true" />
+                Buscando disponibilidad...
+              </p>
             )}
             {vehiclesError && (
               <p className={styles.errorText}>Error al cargar vehículos: {vehiclesError}</p>

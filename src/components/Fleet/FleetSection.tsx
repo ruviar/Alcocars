@@ -3,12 +3,46 @@ import { addDays, startOfToday } from 'date-fns';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useNavigate } from 'react-router-dom';
-import { vehicles, type Vehicle } from '../../data/vehicles';
+import { useVehicles, type ApiVehicle } from '../../hooks/useVehicles';
 import styles from './FleetSection.module.css';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const filters: Vehicle['category'][] = ['Turismos', 'Furgonetas', '4x4', 'Autocaravanas'];
+type FleetFilter = 'Turismos' | 'Furgonetas' | '4x4' | 'Autocaravanas';
+
+const filters: FleetFilter[] = ['Turismos', 'Furgonetas', '4x4', 'Autocaravanas'];
+
+const UI_TO_API_CATEGORY: Record<FleetFilter, string> = {
+  Turismos: 'TURISMOS',
+  Furgonetas: 'FURGONETAS',
+  '4x4': 'SUV_4X4',
+  Autocaravanas: 'AUTOCARAVANAS',
+};
+
+const API_TO_UI_CATEGORY: Record<string, FleetFilter> = {
+  TURISMOS: 'Turismos',
+  FURGONETAS: 'Furgonetas',
+  SUV_4X4: '4x4',
+  AUTOCARAVANAS: 'Autocaravanas',
+};
+
+function formatFuel(value: string): string {
+  const map: Record<string, string> = {
+    GASOLINA: 'Gasolina',
+    DIESEL: 'Diesel',
+    ELECTRICO: 'Electrico',
+    HIBRIDO: 'Hibrido',
+  };
+  return map[value] ?? value;
+}
+
+function formatTransmission(value: string): string {
+  const map: Record<string, string> = {
+    MANUAL: 'Manual',
+    AUTOMATICO: 'Automatico',
+  };
+  return map[value] ?? value;
+}
 
 function FeatureIcon({ type }: { type: 'seats' | 'power' | 'fuel' | 'transmission' }) {
   if (type === 'seats') {
@@ -44,21 +78,33 @@ function FeatureIcon({ type }: { type: 'seats' | 'power' | 'fuel' | 'transmissio
 
 export default function FleetSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const [activeFilter, setActiveFilter] = useState<Vehicle['category']>('Turismos');
+  const [activeFilter, setActiveFilter] = useState<FleetFilter>('Turismos');
   const navigate = useNavigate();
 
+  const startDate = startOfToday();
+  const endDate = addDays(startDate, 1);
+  const category = UI_TO_API_CATEGORY[activeFilter];
+
+  const { vehicles, isLoading, error } = useVehicles({
+    officeSlug: 'zaragoza',
+    startDate: `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`,
+    endDate: `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`,
+    category,
+  });
+
   const filteredVehicles = useMemo(
-    () => vehicles.filter((vehicle) => vehicle.category === activeFilter),
-    [activeFilter],
+    () => vehicles ?? [],
+    [vehicles],
   );
 
-  const handleReserve = (category: Vehicle['category']) => {
+  const handleReserve = (categoryValue: string) => {
     const from = startOfToday();
+    const uiCategory = API_TO_UI_CATEGORY[categoryValue] ?? 'Turismos';
 
     navigate('/reserva', {
       state: {
         location: 'Zaragoza',
-        vehicleType: category === '4x4' ? '4×4' : category,
+        vehicleType: uiCategory === '4x4' ? '4×4' : uiCategory,
         dateRange: {
           from,
           to: addDays(from, 1),
@@ -100,7 +146,7 @@ export default function FleetSection() {
     }, section);
 
     return () => ctx.revert();
-  }, [activeFilter]);
+  }, [activeFilter, filteredVehicles.length]);
 
   return (
     <section ref={sectionRef} id="flota" className={styles.section}>
@@ -128,11 +174,25 @@ export default function FleetSection() {
           ))}
         </div>
 
+        {isLoading && <p className={styles.statusText}>Cargando vehículos...</p>}
+        {error && !isLoading && <p className={styles.errorText}>Error al cargar vehículos: {error}</p>}
+
         <div className={styles.grid}>
-          {filteredVehicles.map((vehicle) => (
+          {isLoading && Array.from({ length: 4 }).map((_, index) => (
+            <article key={`fleet-skeleton-${index}`} className={`${styles.card} ${styles.skeletonCard}`} aria-hidden="true">
+              <div className={styles.media} />
+              <div className={styles.content}>
+                <div className={styles.skeletonLine} />
+                <div className={`${styles.skeletonLine} ${styles.skeletonLineLg}`} />
+                <div className={`${styles.skeletonLine} ${styles.skeletonLineSm}`} />
+              </div>
+            </article>
+          ))}
+
+          {!isLoading && !error && filteredVehicles.map((vehicle: ApiVehicle) => (
             <article key={vehicle.id} className={styles.card}>
               <div className={styles.media}>
-                <img src={vehicle.image} alt={`${vehicle.brand} ${vehicle.name}`} loading="lazy" />
+                <img src={vehicle.imageUrl} alt={`${vehicle.brand} ${vehicle.model}`} loading="lazy" />
                 <span className={styles.badge}>{vehicle.highlight}</span>
               </div>
 
@@ -144,8 +204,8 @@ export default function FleetSection() {
                   </p>
                 </div>
 
-                <h3 className={styles.name}>{vehicle.name}</h3>
-                <p className={styles.category}>{vehicle.category}</p>
+                <h3 className={styles.name}>{vehicle.model}</h3>
+                <p className={styles.category}>{API_TO_UI_CATEGORY[vehicle.category] ?? vehicle.category}</p>
 
                 <ul className={styles.features}>
                   <li>
@@ -158,11 +218,11 @@ export default function FleetSection() {
                   </li>
                   <li>
                     <FeatureIcon type="fuel" />
-                    <span>{vehicle.fuel}</span>
+                    <span>{formatFuel(vehicle.fuelType)}</span>
                   </li>
                   <li>
                     <FeatureIcon type="transmission" />
-                    <span>{vehicle.transmission}</span>
+                    <span>{formatTransmission(vehicle.transmissionType)}</span>
                   </li>
                 </ul>
 
@@ -179,6 +239,10 @@ export default function FleetSection() {
             </article>
           ))}
         </div>
+
+        {!isLoading && !error && filteredVehicles.length === 0 && (
+          <p className={styles.statusText}>No hay vehículos disponibles ahora mismo para este filtro.</p>
+        )}
       </div>
     </section>
   );

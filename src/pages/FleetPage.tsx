@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
+import { addDays, format, startOfToday } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
-import { categories, vehicles, type VehicleCategory } from '../data/vehicles';
+import { useNavigate } from 'react-router-dom';
+import { useVehicles, type ApiVehicle } from '../hooks/useVehicles';
 import styles from './FleetPage.module.css';
 
 type BadgeType = 'seats' | 'transmission' | 'fuel';
@@ -37,15 +39,49 @@ function BadgeIcon({ type }: { type: BadgeType }) {
 }
 
 export default function FleetPage() {
-  const [activeCategory, setActiveCategory] = useState<VehicleCategory>('Todos');
+  const [activeCategory, setActiveCategory] = useState<string>('Todos');
+  const navigate = useNavigate();
+
+  const categories = ['Todos', 'Turismos', 'Furgonetas', '4x4', 'Autocaravanas'];
+  const apiCategoryMap: Record<string, string | undefined> = {
+    Todos: undefined,
+    Turismos: 'TURISMOS',
+    Furgonetas: 'FURGONETAS',
+    '4x4': 'SUV_4X4',
+    Autocaravanas: 'AUTOCARAVANAS',
+  };
+  const uiCategoryMap: Record<string, string> = {
+    TURISMOS: 'Turismos',
+    FURGONETAS: 'Furgonetas',
+    SUV_4X4: '4x4',
+    AUTOCARAVANAS: 'Autocaravanas',
+  };
+
+  const from = startOfToday();
+  const to = addDays(from, 1);
+  const { vehicles, isLoading, error } = useVehicles({
+    officeSlug: 'zaragoza',
+    startDate: format(from, 'yyyy-MM-dd'),
+    endDate: format(to, 'yyyy-MM-dd'),
+    category: apiCategoryMap[activeCategory],
+  });
 
   const filteredVehicles = useMemo(() => {
-    if (activeCategory === 'Todos') {
-      return vehicles;
-    }
+    return vehicles ?? [];
+  }, [vehicles]);
 
-    return vehicles.filter((vehicle) => vehicle.category === activeCategory);
-  }, [activeCategory]);
+  const handleReserve = (vehicle: ApiVehicle) => {
+    navigate('/reserva', {
+      state: {
+        location: vehicle.office.city,
+        vehicleType: uiCategoryMap[vehicle.category] === '4x4' ? '4×4' : uiCategoryMap[vehicle.category],
+        dateRange: {
+          from,
+          to,
+        },
+      },
+    });
+  };
 
   return (
     <main className={styles.page}>
@@ -72,9 +108,23 @@ export default function FleetPage() {
           ))}
         </nav>
 
+        {isLoading && <p className={styles.statusText}>Cargando vehículos...</p>}
+        {error && !isLoading && <p className={styles.errorText}>Error al cargar vehículos: {error}</p>}
+
         <motion.section layout className={styles.grid} aria-live="polite">
+          {isLoading && Array.from({ length: 6 }).map((_, index) => (
+            <article key={`fleet-page-skeleton-${index}`} className={`${styles.card} ${styles.skeletonCard}`} aria-hidden="true">
+              <div className={styles.media} />
+              <div className={styles.content}>
+                <div className={styles.skeletonLine} />
+                <div className={`${styles.skeletonLine} ${styles.skeletonLineLg}`} />
+                <div className={`${styles.skeletonLine} ${styles.skeletonLineSm}`} />
+              </div>
+            </article>
+          ))}
+
           <AnimatePresence mode="popLayout">
-            {filteredVehicles.map((vehicle) => (
+            {!isLoading && !error && filteredVehicles.map((vehicle) => (
               <motion.article
                 key={vehicle.id}
                 layout
@@ -85,12 +135,12 @@ export default function FleetPage() {
                 transition={{ duration: 0.22, ease: 'easeOut' }}
               >
                 <div className={styles.media}>
-                  <img src={vehicle.image} alt={`${vehicle.brand} ${vehicle.name}`} loading="lazy" />
+                  <img src={vehicle.imageUrl} alt={`${vehicle.brand} ${vehicle.model}`} loading="lazy" />
                 </div>
 
                 <div className={styles.content}>
                   <p className={styles.brand}>{vehicle.brand}</p>
-                  <h2 className={styles.name}>{vehicle.name}</h2>
+                  <h2 className={styles.name}>{vehicle.model}</h2>
 
                   <div className={styles.badges}>
                     <span className={styles.badge}>
@@ -99,11 +149,11 @@ export default function FleetPage() {
                     </span>
                     <span className={styles.badge}>
                       <BadgeIcon type="transmission" />
-                      <span>{vehicle.transmission}</span>
+                      <span>{vehicle.transmissionType}</span>
                     </span>
                     <span className={styles.badge}>
                       <BadgeIcon type="fuel" />
-                      <span>{vehicle.fuel}</span>
+                      <span>{vehicle.fuelType}</span>
                     </span>
                   </div>
 
@@ -111,7 +161,7 @@ export default function FleetPage() {
                     <p className={styles.rate}>
                       {vehicle.dailyRate} EUR <span>/dia</span>
                     </p>
-                    <button type="button" className={styles.reserveButton}>
+                    <button type="button" className={styles.reserveButton} onClick={() => handleReserve(vehicle)}>
                       Reservar
                     </button>
                   </div>
@@ -120,6 +170,10 @@ export default function FleetPage() {
             ))}
           </AnimatePresence>
         </motion.section>
+
+        {!isLoading && !error && filteredVehicles.length === 0 && (
+          <p className={styles.statusText}>No hay vehículos disponibles para este filtro y fecha.</p>
+        )}
       </div>
     </main>
   );

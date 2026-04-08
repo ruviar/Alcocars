@@ -99,6 +99,14 @@
   color: var(--silver);
 }
 
+.vehicleLoading {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--silver);
+  font-size: 14px;
+}
+
 .extrasList {
   display: grid;
 }

@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { vehicles as staticVehicles } from '../data/vehicles';
+import { useEffect, useState } from 'react';
+import { api } from '../lib/api';
 
 export type ApiVehicle = {
   id: string;
@@ -23,71 +23,86 @@ type Params = {
   category?: string;
 };
 
-const API_TO_STATIC_CATEGORY: Record<string, string> = {
-  TURISMOS: 'Turismos',
-  FURGONETAS: 'Furgonetas',
-  SUV_4X4: '4x4',
-  AUTOCARAVANAS: 'Autocaravanas',
-};
-
-const STATIC_OFFICE_BY_VEHICLE_ID: Record<string, string> = {
-  'seat-ibiza-eco': 'zaragoza',
-  'seat-leon-tdi': 'zaragoza',
-  'ford-custom-6p': 'zaragoza',
-  'furgoneta-carga-3m3': 'zaragoza',
-  'furgoneta-carga-12m3': 'zaragoza',
-  'toyota-hilux-pickup': 'zaragoza',
-  'vw-passat-business': 'zaragoza',
-  'renault-clio-tudela': 'tudela',
-  'furgoneta-pasajeros-9p': 'tudela',
-  'furgoneta-carga-7m3': 'tudela',
-  'autocaravana-tudela': 'tudela',
-  'dacia-sandero-soria': 'soria',
-  'suzuki-jimny-4x4': 'soria',
-  'furgoneta-caja-abierta': 'soria',
-  'toyota-land-cruiser-largo': 'soria',
-};
-
-const OFFICE_CITY_BY_SLUG: Record<string, string> = {
-  zaragoza: 'Zaragoza',
-  tudela: 'Tudela',
-  soria: 'Soria',
+type RawVehicle = {
+  id: string;
+  name: string;
+  brand: string;
+  category: string;
+  seats: number;
+  dailyRate: string | number;
+  imageUrl: string;
+  fuel: string;
+  transmission: string;
+  power: string;
+  highlight: string;
+  office: { slug: string; city: string };
 };
 
 export function useVehicles(params: Params | null) {
-  const vehicles = useMemo(() => {
-    if (!params) return null;
+  const [vehicles, setVehicles] = useState<ApiVehicle[] | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    const staticCategory = params.category
-      ? API_TO_STATIC_CATEGORY[params.category]
-      : null;
+  useEffect(() => {
+    let cancelled = false;
 
-    const byOffice = staticVehicles.filter(
-      (vehicle) => STATIC_OFFICE_BY_VEHICLE_ID[vehicle.id] === params.officeSlug,
-    );
+    if (!params) {
+      setVehicles(null);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
 
-    const filtered = staticCategory
-      ? byOffice.filter((v) => v.category === staticCategory)
-      : byOffice;
+    const query = new URLSearchParams({
+      officeSlug: params.officeSlug,
+      startDate: params.startDate,
+      endDate: params.endDate,
+    });
 
-    const officeCity = OFFICE_CITY_BY_SLUG[params.officeSlug] ?? params.officeSlug;
+    if (params.category) {
+      query.set('category', params.category);
+    }
 
-    return filtered.map((v) => ({
-      id: v.id,
-      model: v.name,
-      brand: v.brand,
-      category: v.category,
-      seats: v.seats,
-      dailyRate: String(v.dailyRate),
-      imageUrl: v.image,
-      fuelType: v.fuel,
-      transmissionType: v.transmission,
-      power: v.power,
-      highlight: v.highlight,
-      office: { slug: params.officeSlug, city: officeCity },
-    })) as ApiVehicle[];
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    setIsLoading(true);
+    setError(null);
+
+    api
+      .get<RawVehicle[]>(`/api/vehicles?${query.toString()}`)
+      .then((rows) => {
+        if (cancelled) return;
+
+        const mapped: ApiVehicle[] = rows.map((v) => ({
+          id: v.id,
+          model: v.name,
+          brand: v.brand,
+          category: v.category,
+          seats: v.seats,
+          dailyRate: String(v.dailyRate),
+          imageUrl: v.imageUrl,
+          fuelType: v.fuel,
+          transmissionType: v.transmission,
+          power: v.power,
+          highlight: v.highlight,
+          office: v.office,
+        }));
+
+        setVehicles(mapped);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setVehicles([]);
+        setError(err instanceof Error ? err.message : 'No se pudieron cargar los vehículos');
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [params?.officeSlug, params?.startDate, params?.endDate, params?.category]);
 
-  return { vehicles, loading: false, error: null };
+  return { vehicles, isLoading, loading: isLoading, error };
 }

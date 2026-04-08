@@ -78,6 +78,16 @@
   gap: 18px;
 }
 
+.statusText {
+  margin-bottom: 16px;
+  color: var(--silver);
+}
+
+.errorText {
+  margin-bottom: 16px;
+  color: #B42318;
+}
+
 .card {
   display: grid;
   grid-template-rows: auto 1fr;
@@ -218,5 +228,38 @@
 
   .reserveButton {
     width: 100%;
+  }
+}
+
+.skeletonCard {
+  pointer-events: none;
+}
+
+.skeletonLine {
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #edf0f7 0%, #f7f9fc 50%, #edf0f7 100%);
+  background-size: 180% 100%;
+  animation: fleetPageSkeleton 1.2s ease-in-out infinite;
+}
+
+.skeletonLineLg {
+  margin-top: 10px;
+  width: 68%;
+  height: 20px;
+}
+
+.skeletonLineSm {
+  margin-top: 8px;
+  width: 44%;
+}
+
+@keyframes fleetPageSkeleton {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: 0 0;
   }
 }

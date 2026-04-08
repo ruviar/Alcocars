@@ -1,7 +1,16 @@
-const BASE = import.meta.env.VITE_API_BASE_URL ?? '';
+const RAW_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001';
+const BASE = RAW_BASE.replace(/\/$/, '');
+
+function buildUrl(path: string): string {
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${BASE}${normalizedPath}`;
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(buildUrl(path), {
     headers: { 'Content-Type': 'application/json', ...init?.headers },
     ...init,
   });

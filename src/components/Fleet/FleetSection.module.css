@@ -72,6 +72,14 @@
   gap: 18px;
 }
 
+.statusText {
+  color: var(--silver);
+}
+
+.errorText {
+  color: #B42318;
+}
+
 .card {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -220,5 +228,38 @@
 
   .reserveButton {
     width: 100%;
+  }
+}
+
+.skeletonCard {
+  pointer-events: none;
+}
+
+.skeletonLine {
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #edf0f7 0%, #f7f9fc 50%, #edf0f7 100%);
+  background-size: 180% 100%;
+  animation: fleetSkeleton 1.2s ease-in-out infinite;
+}
+
+.skeletonLineLg {
+  margin-top: 10px;
+  width: 72%;
+  height: 20px;
+}
+
+.skeletonLineSm {
+  margin-top: 8px;
+  width: 42%;
+}
+
+@keyframes fleetSkeleton {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: 0 0;
   }
 }
