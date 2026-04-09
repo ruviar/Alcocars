@@ -6,7 +6,7 @@ describe('getAllReservations', () => {
   beforeEach(() => { vi.clearAllMocks(); });
   afterEach(() => { vi.restoreAllMocks(); });
 
-  it('queries with client, vehicle, office includes ordered by createdAt desc', async () => {
+  it('queries with client, category, office includes ordered by createdAt desc', async () => {
     vi.spyOn(prisma.reservation, 'findMany').mockResolvedValue([]);
 
     await getAllReservations();
@@ -15,7 +15,7 @@ describe('getAllReservations', () => {
       expect.objectContaining({
         include: expect.objectContaining({
           client: expect.any(Object),
-          vehicle: expect.any(Object),
+          category: expect.any(Object),
           office: expect.any(Object),
         }),
         orderBy: { createdAt: 'desc' },
