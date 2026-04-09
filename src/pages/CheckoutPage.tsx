@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
+import { DayPicker, type ClassNames, type DateRange } from 'react-day-picker';
 import { addDays, format, startOfToday } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -152,6 +153,15 @@ function formatHumanDate(dateIso: string): string {
   }
 
   return format(value, 'd MMM yyyy', { locale: es });
+}
+
+function toDateFromIso(dateIso: string): Date | undefined {
+  if (!dateIso) {
+    return undefined;
+  }
+
+  const date = new Date(`${dateIso}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? undefined : date;
 }
 
 function resolveSuperCategory(rawValue?: string): SuperCategory | null {
@@ -341,6 +351,59 @@ export default function CheckoutPage() {
   const isStep4Valid = personalData.nombre.trim().length > 0 && isEmailValid && isPhoneValid;
 
   const progressPercentage = ((currentStep - 1) / 3) * 100;
+
+  const selectedDateRange = useMemo<DateRange | undefined>(() => {
+    const from = toDateFromIso(pickupDate);
+    const to = toDateFromIso(returnDate);
+
+    if (!from) {
+      return undefined;
+    }
+
+    return { from, to };
+  }, [pickupDate, returnDate]);
+
+  const dayPickerClassNames: Partial<ClassNames> = {
+    root: styles.dayPicker,
+    months: styles.rdpMonths,
+    month: styles.rdpMonth,
+    month_caption: styles.rdpMonthCaption,
+    caption_label: styles.rdpCaptionLabel,
+    nav: styles.rdpNav,
+    button_previous: styles.rdpNavButton,
+    button_next: styles.rdpNavButton,
+    chevron: styles.rdpChevron,
+    month_grid: styles.rdpMonthGrid,
+    weekdays: styles.rdpWeekdays,
+    weekday: styles.rdpWeekday,
+    weeks: styles.rdpWeeks,
+    week: styles.rdpWeek,
+    day: styles.rdpDay,
+    day_button: styles.rdpDayButton,
+    disabled: styles.rdpDayDisabled,
+    outside: styles.rdpDayOutside,
+    today: styles.rdpDayToday,
+    selected: styles.rdpDaySelected,
+    range_start: styles.rdpRangeStart,
+    range_middle: styles.rdpRangeMiddle,
+    range_end: styles.rdpRangeEnd,
+  };
+
+  const handleDateRangeSelect = (nextRange: DateRange | undefined) => {
+    if (!nextRange?.from) {
+      return;
+    }
+
+    setPickupDate(toIsoDate(nextRange.from));
+
+    if (nextRange.to && nextRange.to > nextRange.from) {
+      setReturnDate(toIsoDate(nextRange.to));
+    } else {
+      setReturnDate(toIsoDate(addDays(nextRange.from, 1)));
+    }
+
+    setStepError(null);
+  };
 
   const reservationMessage = useMemo(() => {
     const extrasLines = selectedExtrasList.length > 0
@@ -562,9 +625,9 @@ export default function CheckoutPage() {
       <div className={styles.layout}>
         <header className={styles.header}>
           <p className={styles.kicker}>Reserva paso a paso</p>
-          <h1 className={styles.title}>WIZARD DE RESERVA</h1>
+          <h1 className={styles.title}>Reserva Corporativa</h1>
           <p className={styles.subtitle}>
-            Completa cada paso en orden para enviar una solicitud clara y sin friccion.
+            Completa cada paso para enviar una solicitud clara, con fechas visuales y un resumen final detallado.
           </p>
 
           <div className={styles.progressTrack} aria-hidden="true">
@@ -609,37 +672,42 @@ export default function CheckoutPage() {
             <div className={styles.stepView}>
               {currentStep === 1 && (
                 <>
-                  <div className={styles.fieldGridTwo}>
-                    <label className={styles.field}>
-                      <span className={styles.fieldLabel}>Dia de recogida</span>
-                      <input
-                        className={styles.inputControl}
-                        type="date"
-                        value={pickupDate}
-                        min={toIsoDate(today)}
-                        onChange={(event) => {
-                          setPickupDate(event.target.value);
-                          setStepError(null);
-                        }}
-                        required
-                      />
-                    </label>
+                  <section className={styles.calendarSection} aria-label="Seleccion de rango de fechas">
+                    <div className={styles.calendarHeader}>
+                      <span className={styles.fieldLabel}>Selecciona el intervalo de fechas</span>
+                      <p className={styles.helperText}>
+                        Selecciona en el calendario el dia de recogida y devolucion.
+                      </p>
+                    </div>
 
-                    <label className={styles.field}>
-                      <span className={styles.fieldLabel}>Dia de devolucion</span>
-                      <input
-                        className={styles.inputControl}
-                        type="date"
-                        value={returnDate}
-                        min={pickupDate || toIsoDate(today)}
-                        onChange={(event) => {
-                          setReturnDate(event.target.value);
-                          setStepError(null);
-                        }}
-                        required
+                    <div className={styles.calendarWrapper}>
+                      <DayPicker
+                        mode="range"
+                        locale={es}
+                        weekStartsOn={1}
+                        numberOfMonths={1}
+                        pagedNavigation
+                        fixedWeeks
+                        showOutsideDays
+                        selected={selectedDateRange}
+                        onSelect={handleDateRangeSelect}
+                        disabled={{ before: today }}
+                        defaultMonth={selectedDateRange?.from ?? today}
+                        classNames={dayPickerClassNames}
                       />
-                    </label>
-                  </div>
+                    </div>
+
+                    <div className={styles.calendarPreview}>
+                      <p>
+                        <span>Recogida</span>
+                        <strong>{formatHumanDate(pickupDate)}</strong>
+                      </p>
+                      <p>
+                        <span>Devolucion</span>
+                        <strong>{formatHumanDate(returnDate)}</strong>
+                      </p>
+                    </div>
+                  </section>
 
                   <div className={styles.fieldGridTwo}>
                     <label className={styles.field}>
@@ -726,13 +794,6 @@ export default function CheckoutPage() {
                       />
                     </label>
                   </div>
-
-                  <div className={styles.legalNotice} role="note" aria-label="Aviso legal importante">
-                    <p className={styles.legalNoticeLabel}>Aviso legal importante</p>
-                    <p>
-                      RECUERDE QUE NO ES UNA RESERVA FORMAL. CONTACTAREMOS CON USTED PARA CONCRETAR LOS DETALLES
-                    </p>
-                  </div>
                 </>
               )}
 
@@ -817,7 +878,24 @@ export default function CheckoutPage() {
               {currentStep === 4 && (
                 <>
                   <section className={styles.summaryPanel}>
-                    <h3 className={styles.summaryTitle}>Desglose dinamico</h3>
+                    <h3 className={styles.summaryTitle}>Factura estimada</h3>
+
+                    <div className={styles.invoiceMeta}>
+                      <p>
+                        <span>Periodo</span>
+                        <strong>
+                          {formatHumanDate(pickupDate)} {pickupTime} - {formatHumanDate(returnDate)} {returnTime}
+                        </strong>
+                      </p>
+                      <p>
+                        <span>Recogida y devolucion</span>
+                        <strong>{pickupLocation} → {returnLocation}</strong>
+                      </p>
+                      <p>
+                        <span>Gama</span>
+                        <strong>{selectedTariff?.name ?? '--'}</strong>
+                      </p>
+                    </div>
 
                     <ul className={styles.summaryList}>
                       <li className={styles.summaryListItem}>
@@ -939,6 +1017,15 @@ export default function CheckoutPage() {
               </p>
             )}
 
+            {currentStep === 4 && (
+              <div className={styles.legalNotice} role="note" aria-label="Aviso legal importante">
+                <p className={styles.legalNoticeLabel}>Aviso legal importante</p>
+                <p>
+                  RECUERDE QUE NO ES UNA RESERVA FORMAL. CONTACTAREMOS CON USTED PARA CONCRETAR LOS DETALLES
+                </p>
+              </div>
+            )}
+
             <div className={styles.stepActions}>
               <button
                 type="button"
@@ -964,33 +1051,6 @@ export default function CheckoutPage() {
               )}
             </div>
           </form>
-
-          <aside className={styles.summaryCard} aria-label="Resumen rapido de la solicitud">
-            <h2 className={styles.summaryTitle}>Resumen rapido</h2>
-
-            <ul className={styles.summaryList}>
-              <li className={styles.summaryListItem}>
-                <span className={styles.summaryLabel}>Fechas</span>
-                <strong className={styles.summaryValue}>{formatHumanDate(pickupDate)} - {formatHumanDate(returnDate)}</strong>
-              </li>
-              <li className={styles.summaryListItem}>
-                <span className={styles.summaryLabel}>Ubicaciones</span>
-                <strong className={styles.summaryValue}>{pickupLocation} → {returnLocation}</strong>
-              </li>
-              <li className={styles.summaryListItem}>
-                <span className={styles.summaryLabel}>Gama</span>
-                <strong className={styles.summaryValue}>{selectedTariff?.name ?? '--'}</strong>
-              </li>
-              <li className={styles.summaryListItem}>
-                <span className={styles.summaryLabel}>Kilometraje previsto</span>
-                <strong className={styles.summaryValue}>{isPlannedKmValid ? `${plannedKm} km` : '--'}</strong>
-              </li>
-              <li className={`${styles.summaryListItem} ${styles.summaryListTotal}`}>
-                <span className={styles.summaryLabel}>Total estimado</span>
-                <strong className={styles.summaryValue}>{finalTotal === null ? 'A consultar' : formatCurrency(finalTotal)}</strong>
-              </li>
-            </ul>
-          </aside>
         </div>
       </div>
     </main>
