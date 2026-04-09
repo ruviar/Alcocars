@@ -163,10 +163,10 @@
 .calendarWrapper {
   width: 100%;
   max-width: 360px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--white);
-  padding: 10px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
 }
 
 .calendarPreview {
@@ -177,10 +177,11 @@
 
 .calendarPreview p {
   margin: 0;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--white);
-  padding: 9px 10px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  padding: 0 0 8px;
   display: grid;
   gap: 2px;
 }
@@ -227,7 +228,7 @@
 .textareaControl {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 8px;
   background: var(--white);
   color: var(--chalk);
   font: inherit;
@@ -256,8 +257,8 @@
 .selectControl:focus,
 .textareaControl:focus {
   outline: none;
-  border-color: rgba(0, 45, 114, 0.48);
-  box-shadow: 0 0 0 3px rgba(0, 45, 114, 0.12);
+  border-color: rgba(0, 45, 114, 0.64);
+  box-shadow: none;
 }
 
 .vehicleGroups {
@@ -280,27 +281,30 @@
 
 .vehicleList {
   display: grid;
-  gap: 9px;
+  gap: 0;
+  border-top: 1px solid var(--border);
 }
 
 .vehicleCard {
   display: grid;
   gap: 8px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding: 12px 4px;
   cursor: pointer;
-  background: var(--white);
+  background: transparent;
   transition: border-color var(--transition-fast), background var(--transition-fast);
 }
 
 .vehicleCard:hover {
-  border-color: rgba(0, 45, 114, 0.35);
+  border-color: var(--border);
+  background: rgba(1, 35, 105, 0.03);
 }
 
 .vehicleCardSelected {
-  border-color: rgba(151, 215, 0, 0.85);
-  background: rgba(151, 215, 0, 0.13);
+  border-bottom-color: rgba(151, 215, 0, 0.85);
+  background: rgba(151, 215, 0, 0.11);
 }
 
 .vehicleHeader {
@@ -341,7 +345,8 @@
 
 .extrasList {
   display: grid;
-  gap: 9px;
+  gap: 0;
+  border-top: 1px solid var(--border);
 }
 
 .extraItem {
@@ -349,10 +354,11 @@
   grid-template-columns: auto 1fr;
   gap: 10px;
   align-items: start;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--white);
-  padding: 10px 12px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  padding: 10px 4px;
 }
 
 .extraCheckbox {
@@ -382,10 +388,16 @@
 .contactPanel {
   display: grid;
   gap: 12px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--white);
-  padding: 14px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.contactPanel {
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
 }
 
 .summaryTitle {
@@ -398,8 +410,8 @@
 .invoiceMeta {
   display: grid;
   gap: 0;
-  border-top: 1px dashed var(--border);
-  border-bottom: 1px dashed var(--border);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 
 .invoiceMeta p {
@@ -408,7 +420,7 @@
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  border-bottom: 1px dashed rgba(1, 35, 105, 0.14);
+  border-bottom: 1px solid rgba(1, 35, 105, 0.14);
 }
 
 .invoiceMeta p:last-child {
@@ -502,10 +514,10 @@
 }
 
 .legalNotice {
-  border: 1px solid rgba(151, 215, 0, 0.78);
+  border: none;
   border-left: 5px solid var(--pantone-375);
-  border-radius: 10px;
-  background: rgba(151, 215, 0, 0.12);
+  border-radius: 0;
+  background: rgba(151, 215, 0, 0.08);
   padding: 12px 14px;
   color: var(--pantone-280);
   line-height: 1.5;
@@ -592,11 +604,11 @@
 .successCard {
   width: min(760px, 100%);
   margin-inline: auto;
-  border: 1px solid var(--border);
+  border: none;
   border-top: 4px solid var(--pantone-375);
-  border-radius: 14px;
-  background: var(--white);
-  padding: clamp(20px, 4vw, 32px);
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
   display: grid;
   gap: 14px;
 }
@@ -616,10 +628,11 @@
 }
 
 .successSummary {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: #ffffff;
-  padding: 12px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  padding: 12px 0;
   display: grid;
   gap: 8px;
 }
