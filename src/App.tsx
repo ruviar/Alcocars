@@ -7,7 +7,7 @@ import BlogPage from './pages/BlogPage';
 import CompanyPage from './pages/CompanyPage';
 import ContactPage from './pages/ContactPage';
 import CheckoutPage from './pages/CheckoutPage';
-import FleetPage from './pages/FleetPage';
+import CategoriesPage from './pages/CategoriesPage';
 import Home from './pages/Home';
 import LegalPage from './pages/LegalPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -25,7 +25,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/empresa" element={<CompanyPage />} />
         <Route path="/blog" element={<BlogPage />} />
-        <Route path="/flota" element={<FleetPage />} />
+        <Route path="/flota" element={<CategoriesPage />} />
         <Route path="/servicios" element={<ServicesPage />} />
         <Route path="/sedes" element={<OfficesPage />} />
         <Route path="/contacto" element={<ContactPage />} />
