@@ -6,14 +6,13 @@ describe('getAvailableVehicles', () => {
   beforeEach(() => { vi.clearAllMocks(); });
   afterEach(() => { vi.restoreAllMocks(); });
 
-  it('queries vehicles filtered by office, category, and date overlap exclusion', async () => {
+  it('queries active vehicles filtered by office slug', async () => {
     vi.spyOn(prisma.vehicle, 'findMany').mockResolvedValue([]);
 
     await getAvailableVehicles({
       officeSlug: 'zaragoza',
       startDate: new Date('2026-04-01'),
       endDate: new Date('2026-04-05'),
-      category: 'TURISMOS',
     });
 
     expect(prisma.vehicle.findMany).toHaveBeenCalledWith(
@@ -21,32 +20,21 @@ describe('getAvailableVehicles', () => {
         where: expect.objectContaining({
           isActive: true,
           office: { slug: 'zaragoza' },
-          category: 'TURISMOS',
-          NOT: {
-            reservations: {
-              some: expect.objectContaining({
-                status: { not: 'CANCELLED' },
-                startDate: { lt: new Date('2026-04-05') },
-                endDate: { gt: new Date('2026-04-01') },
-              }),
-            },
-          },
         }),
       }),
     );
   });
 
-  it('omits category filter when not provided', async () => {
+  it('returns empty array when no vehicles match', async () => {
     vi.spyOn(prisma.vehicle, 'findMany').mockResolvedValue([]);
 
-    await getAvailableVehicles({
+    const result = await getAvailableVehicles({
       officeSlug: 'soria',
       startDate: new Date('2026-04-01'),
       endDate: new Date('2026-04-05'),
     });
 
-    const call = vi.mocked(prisma.vehicle.findMany).mock.calls[0][0] as any;
-    expect(call.where.category).toBeUndefined();
+    expect(result).toEqual([]);
   });
 });
 

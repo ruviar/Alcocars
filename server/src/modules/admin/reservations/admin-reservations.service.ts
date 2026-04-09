@@ -1,7 +1,7 @@
 import { prisma } from '../../../db/prisma';
 
 /**
- * Returns all reservations with related client, vehicle, and office data,
+ * Returns all reservations with related client, category, and office data,
  * ordered newest-first for the admin table view.
  */
 export async function getAllReservations() {
@@ -10,8 +10,8 @@ export async function getAllReservations() {
       client: {
         select: { firstName: true, lastName: true, email: true, phone: true },
       },
-      vehicle: {
-        select: { brand: true, name: true },
+      category: {
+        select: { name: true, slug: true },
       },
       office: {
         select: { city: true },

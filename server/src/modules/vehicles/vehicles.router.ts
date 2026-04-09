@@ -3,7 +3,7 @@ import { vehicleQuerySchema } from './vehicles.schema';
 import { getAvailableVehicles, getVehicleById } from './vehicles.service';
 
 export async function vehiclesRouter(app: FastifyInstance) {
-  // GET /api/vehicles?officeSlug=zaragoza&startDate=2026-04-01&endDate=2026-04-05&category=TURISMOS
+  // GET /api/vehicles?officeSlug=zaragoza&startDate=2026-04-01&endDate=2026-04-05
   app.get('/vehicles', async (request, reply) => {
     const parsed = vehicleQuerySchema.safeParse(request.query);
     if (!parsed.success) {
@@ -13,12 +13,11 @@ export async function vehiclesRouter(app: FastifyInstance) {
       });
     }
 
-    const { officeSlug, startDate, endDate, category } = parsed.data;
+    const { officeSlug, startDate, endDate } = parsed.data;
     const vehicles = await getAvailableVehicles({
       officeSlug,
       startDate: new Date(startDate),
       endDate: new Date(endDate),
-      category,
     });
 
     return reply.send(vehicles);

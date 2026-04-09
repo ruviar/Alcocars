@@ -4,17 +4,33 @@ import { processCheckout } from '../modules/reservations/reservations.service';
 
 // Shared transaction mock object — set return values per test
 const tx = {
-  vehicle: { findFirst: vi.fn() },
-  reservation: { findFirst: vi.fn(), create: vi.fn() },
+  category: { findFirst: vi.fn() },
+  reservation: { create: vi.fn() },
   office: { findUnique: vi.fn() },
   client: { upsert: vi.fn() },
 };
 
+const mockCategory = {
+  id: 'cat1',
+  isActive: true,
+  price1Day: '89',
+  price2Day: '79',
+  price3Day: '69',
+  price4Day: '65',
+  price5Day: '60',
+  price6Day: '55',
+  price7Day: '50',
+  extraKmRate: '0.25',
+  deposit: '300',
+  franchise: '500',
+};
+
 const validInput = {
-  vehicleId: 'v1',
+  categoryId: 'cat1',
   officeSlug: 'zaragoza',
   startDate: new Date('2026-05-01'),
   endDate: new Date('2026-05-05'),
+  estimatedKm: 400,
   extras: [] as Array<{ key: 'BABY_SEAT' | 'SNOW_CHAINS' | 'ADDITIONAL_DRIVER'; quantity: number }>,
   client: { firstName: 'Ana', lastName: 'García', email: 'ana@test.es', phone: '+34600000001' },
 };
@@ -27,20 +43,13 @@ describe('processCheckout', () => {
   });
   afterEach(() => { vi.restoreAllMocks(); });
 
-  it('throws VEHICLE_NOT_FOUND when vehicle does not exist', async () => {
-    tx.vehicle.findFirst.mockResolvedValue(null);
-    await expect(processCheckout(validInput)).rejects.toThrow('VEHICLE_NOT_FOUND');
-  });
-
-  it('throws VEHICLE_NOT_AVAILABLE when overlap reservation exists', async () => {
-    tx.vehicle.findFirst.mockResolvedValue({ id: 'v1', dailyRate: 89, seats: 5 });
-    tx.reservation.findFirst.mockResolvedValue({ id: 'conflict' });
-    await expect(processCheckout(validInput)).rejects.toThrow('VEHICLE_NOT_AVAILABLE');
+  it('throws CATEGORY_NOT_FOUND when category does not exist', async () => {
+    tx.category.findFirst.mockResolvedValue(null);
+    await expect(processCheckout(validInput)).rejects.toBe('CATEGORY_NOT_FOUND');
   });
 
   it('creates reservation and returns confirmation when available', async () => {
-    tx.vehicle.findFirst.mockResolvedValue({ id: 'v1', dailyRate: '89', seats: 5 });
-    tx.reservation.findFirst.mockResolvedValue(null);
+    tx.category.findFirst.mockResolvedValue(mockCategory);
     tx.office.findUnique.mockResolvedValue({ id: 'office1' });
     tx.client.upsert.mockResolvedValue({ id: 'client1' });
     tx.reservation.create.mockResolvedValue({
@@ -48,6 +57,9 @@ describe('processCheckout', () => {
       confirmationCode: 'ALC-TESTCODE',
       totalAmount: '356.00',
       extras: [],
+      category: { name: 'Turismo', slug: 'turismo' },
+      office: { city: 'Zaragoza', address: 'Calle Test 1', phone: '976000000' },
+      client: { firstName: 'Ana', lastName: 'García', email: 'ana@test.es' },
     });
 
     const result = await processCheckout(validInput);
@@ -58,8 +70,7 @@ describe('processCheckout', () => {
   });
 
   it('multiplies extra total by quantity and rental days', async () => {
-    tx.vehicle.findFirst.mockResolvedValue({ id: 'v1', dailyRate: '89', seats: 5 });
-    tx.reservation.findFirst.mockResolvedValue(null);
+    tx.category.findFirst.mockResolvedValue(mockCategory);
     tx.office.findUnique.mockResolvedValue({ id: 'office1' });
     tx.client.upsert.mockResolvedValue({ id: 'client1' });
     tx.reservation.create.mockResolvedValue({
@@ -67,6 +78,9 @@ describe('processCheckout', () => {
       confirmationCode: 'ALC-TESTCODE',
       totalAmount: '420.00',
       extras: [],
+      category: { name: 'Turismo', slug: 'turismo' },
+      office: { city: 'Zaragoza', address: 'Calle Test 1', phone: '976000000' },
+      client: { firstName: 'Ana', lastName: 'García', email: 'ana@test.es' },
     });
 
     await processCheckout({
@@ -75,6 +89,7 @@ describe('processCheckout', () => {
     });
 
     const createArgs = tx.reservation.create.mock.calls[0][0];
+    // 4 days * 2 seats * 8€/day = 64
     expect(createArgs.data.extrasTotal).toBe(64);
     expect(createArgs.data.extras.create).toEqual([
       {
@@ -86,20 +101,9 @@ describe('processCheckout', () => {
     ]);
   });
 
-  it('throws INVALID_BABY_SEAT_QUANTITY when quantity exceeds available seats', async () => {
-    tx.vehicle.findFirst.mockResolvedValue({ id: 'v1', dailyRate: '89', seats: 4 });
-
-    await expect(
-      processCheckout({
-        ...validInput,
-        extras: [{ key: 'BABY_SEAT', quantity: 4 }],
-      }),
-    ).rejects.toThrow('INVALID_BABY_SEAT_QUANTITY');
-  });
-
   it('throws INVALID_DATE_RANGE when endDate is before startDate', async () => {
     await expect(
       processCheckout({ ...validInput, startDate: new Date('2026-05-10'), endDate: new Date('2026-05-01') }),
-    ).rejects.toThrow('INVALID_DATE_RANGE');
+    ).rejects.toBe('INVALID_DATE_RANGE');
   });
 });
