@@ -12,6 +12,8 @@ type CheckoutState = {
   dateRange?: DateRange;
   location?: string;
   vehicleType?: string;
+  categoryId?: string;
+  estimatedKm?: number;
 };
 
 type ToggleExtraKey = 'snowChains' | 'additionalDriver';
@@ -82,6 +84,10 @@ export default function CheckoutPage() {
   const [babySeatQty, setBabySeatQty] = useState(0);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [detailVehicleId, setDetailVehicleId] = useState<ApiVehicle['id'] | null>(null);
+  const [estimatedKm, setEstimatedKm] = useState<number | ''>(() => {
+    const s = state as CheckoutState | null;
+    return s?.estimatedKm ?? '';
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [confirmationCode, setConfirmationCode] = useState<string | null>(null);
@@ -89,7 +95,9 @@ export default function CheckoutPage() {
   const bookingState = state as CheckoutState | null;
 
   const hasSearchState = Boolean(
-    bookingState?.location && bookingState?.vehicleType && bookingState?.dateRange?.from,
+    bookingState?.location &&
+      (bookingState?.categoryId || bookingState?.vehicleType) &&
+      bookingState?.dateRange?.from,
   );
 
   // Editable search params — initialised from router state
@@ -100,7 +108,12 @@ export default function CheckoutPage() {
   const [isSummaryDateOpen, setIsSummaryDateOpen] = useState(false);
 
   const officeSlug = editLocation.toLowerCase();
-  const apiCategory = editVehicleType !== 'Cualquier tipo' ? CATEGORY_MAP[editVehicleType] : undefined;
+  // Prefer categoryId from new BookingEngine; fall back to legacy vehicleType mapping
+  const apiCategory = bookingState?.categoryId
+    ? bookingState.categoryId
+    : editVehicleType !== 'Cualquier tipo'
+      ? CATEGORY_MAP[editVehicleType]
+      : undefined;
   const startDateStr = editDateRange?.from ? format(editDateRange.from, 'yyyy-MM-dd') : '';
   const endDateStr = editDateRange?.to ? format(editDateRange.to, 'yyyy-MM-dd') : startDateStr;
 
@@ -235,6 +248,11 @@ export default function CheckoutPage() {
     setExtras((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const handleEstimatedKmChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setEstimatedKm(val === '' ? '' : Math.max(0, Number(val)));
+  };
+
   const handleDecreaseBabySeatQty = () => {
     setBabySeatQty((prev) => Math.max(prev - 1, 0));
   };
@@ -290,6 +308,7 @@ export default function CheckoutPage() {
           startDate: startDateStr,
           endDate: endDateStr,
           extras: selectedExtras,
+          estimatedKm: estimatedKm !== '' ? estimatedKm : undefined,
           client: {
             firstName: customerData.nombre,
             lastName: customerData.apellidos,
@@ -615,6 +634,23 @@ export default function CheckoutPage() {
                   </span>
                 </label>
               ))}
+
+              <div className={styles.extraItem}>
+                <div className={styles.babySeatLeft}>
+                  <span className={styles.extraLabel}>Kilómetros estimados</span>
+                  <span className={styles.babySeatHint}>Total de km previstos durante todos los días de alquiler</span>
+                </div>
+                <input
+                  type="number"
+                  min="0"
+                  step="50"
+                  value={estimatedKm}
+                  onChange={handleEstimatedKmChange}
+                  placeholder="0"
+                  className={styles.kmInput}
+                  aria-label="Kilómetros estimados para el viaje"
+                />
+              </div>
             </div>
           </article>
 
