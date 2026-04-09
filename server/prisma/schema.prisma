@@ -75,13 +75,15 @@ model Category {
   price5Day     Decimal       @db.Decimal(10, 2)
   price6Day     Decimal       @db.Decimal(10, 2)
   price7Day     Decimal       @db.Decimal(10, 2)
-  extraKmRate   Decimal       @db.Decimal(5, 3)
+  extraKmRate   Decimal       @db.Decimal(6, 3)
   deposit       Decimal       @db.Decimal(10, 2)
   franchise     Decimal       @db.Decimal(10, 2)
   powerMin      Int?
   powerMax      Int?
   seatsMin      Int?
   seatsMax      Int?
+  // String[] used intentionally — Prisma doesn't support enum[] natively in schema DSL
+  // Valid values: transmissions ∈ ['MANUAL','AUTOMATICO'], fuels ∈ ['GASOLINA','DIESEL','ELECTRICO','HIBRIDO']
   transmissions String[]
   fuels         String[]
   imageUrl      String?
@@ -164,6 +166,8 @@ model Reservation {
 
   @@index([categoryId, startDate, endDate])
   @@index([status])
+  @@index([clientId])
+  @@index([officeId])
   @@map("reservations")
 }
 
@@ -176,6 +180,7 @@ model ReservationExtra {
   pricePerDay   Decimal     @db.Decimal(10, 2)
   totalPrice    Decimal     @db.Decimal(10, 2)
 
+  @@index([reservationId])
   @@map("reservation_extras")
 }
 
