@@ -72,8 +72,9 @@
 }
 
 .summaryValue {
-  font-size: clamp(22px, 2.6vw, 32px);
-  line-height: 1.1;
+  font-size: clamp(15px, 1.9vw, 20px);
+  line-height: 1.35;
+  font-weight: 600;
   color: var(--chalk);
 }
 
@@ -197,6 +198,12 @@
   -webkit-backdrop-filter: blur(20px);
 }
 
+.fieldGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .formTitle {
   font-size: clamp(20px, 2.4vw, 26px);
   line-height: 1;
@@ -229,6 +236,26 @@
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
+.field select {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--chalk);
+  font-size: 16px;
+  line-height: 1.6;
+  font-family: var(--font-body);
+  padding: 0 0 10px;
+  border-radius: 0;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.field select option,
+.field select optgroup {
+  color: var(--color-primary-dark);
+  background: #ffffff;
+}
+
 .field input::placeholder {
   color: rgba(1, 35, 105, 0.35);
 }
@@ -237,6 +264,18 @@
   outline: none;
   border-bottom-color: var(--accent-dim);
   box-shadow: 0 1px 0 0 var(--accent-dim);
+}
+
+.field select:focus {
+  outline: none;
+  border-bottom-color: var(--accent-dim);
+  box-shadow: 0 1px 0 0 var(--accent-dim);
+}
+
+.hintText {
+  font-size: 12px;
+  color: var(--silver);
+  line-height: 1.5;
 }
 
 .submitButton {
@@ -356,6 +395,59 @@
   color: var(--error);
   font-size: 14px;
   line-height: 1.5;
+}
+
+.priceBreakdown {
+  display: grid;
+  gap: 10px;
+}
+
+.priceRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  color: var(--silver);
+  font-size: 14px;
+}
+
+.priceRow strong {
+  color: var(--chalk);
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+.priceTotal {
+  margin-top: 2px;
+  border-bottom: none;
+  border-top: 2px solid rgba(1, 35, 105, 0.14);
+  padding-top: 10px;
+  padding-bottom: 0;
+}
+
+.priceTotal span,
+.priceTotal strong {
+  color: var(--color-primary-dark);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.depositNotice {
+  margin-top: 8px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(151, 215, 0, 0.45);
+  background: rgba(151, 215, 0, 0.12);
+  display: grid;
+  gap: 4px;
+}
+
+.depositNotice p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-primary-dark);
 }
 
 .vehiclesCard {
@@ -930,7 +1022,45 @@
   font-family: var(--font-mono);
 }
 
+.kmInput {
+  width: 90px;
+  flex-shrink: 0;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--chalk);
+  font-size: 16px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  text-align: right;
+  padding: 4px 0;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.kmInput::-webkit-outer-spin-button,
+.kmInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.kmInput::placeholder {
+  color: rgba(94, 104, 121, 0.45);
+  font-weight: 400;
+}
+
+.kmInput:focus {
+  outline: none;
+  border-bottom-color: var(--accent-dim);
+  box-shadow: 0 1px 0 0 var(--accent-dim);
+}
+
 @media (max-width: 720px) {
+  .fieldGrid {
+    grid-template-columns: 1fr;
+  }
+
   .vehicleModalSpecs {
     grid-template-columns: 1fr;
   }

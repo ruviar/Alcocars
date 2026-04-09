@@ -27,6 +27,12 @@ export async function reservationsRouter(app: FastifyInstance) {
       if (err === 'INVALID_DATE_RANGE') {
         return reply.status(422).send({ error: 'INVALID_DATE_RANGE' });
       }
+      if (err === 'INVALID_DAY_RANGE') {
+        return reply.status(422).send({ error: 'INVALID_DAY_RANGE' });
+      }
+      if (err === 'INVALID_KM') {
+        return reply.status(422).send({ error: 'INVALID_KM' });
+      }
       if (err === 'CATEGORY_NOT_FOUND') {
         return reply.status(404).send({ error: 'CATEGORY_NOT_FOUND' });
       }
