@@ -1,6 +1,15 @@
+import { addDays, startOfToday } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { SUPER_CATEGORIES, tariffs, type TariffEntry } from '../data/tariffs';
 import styles from './FleetPage.module.css';
+
+function mapSuperCategoryToVehicleType(category: string): string {
+  if (category === 'Coches') return 'Turismos';
+  if (category === 'Furgonetas') return 'Furgonetas';
+  if (category === 'Todoterrenos') return '4×4';
+  if (category === 'Autocaravanas') return 'Autocaravanas';
+  return 'Cualquier gama';
+}
 
 function TariffCard({ tariff }: { tariff: TariffEntry }) {
   const navigate = useNavigate();
@@ -30,6 +39,24 @@ function TariffCard({ tariff }: { tariff: TariffEntry }) {
   }
 
   const pricePerDay = tariff.rates[0];
+
+  const handleReserve = () => {
+    const from = startOfToday();
+
+    navigate('/reserva', {
+      state: {
+        location: 'Zaragoza',
+        rentalCategory: mapSuperCategoryToVehicleType(tariff.superCategory),
+        vehicleType: mapSuperCategoryToVehicleType(tariff.superCategory),
+        superCategory: tariff.superCategory,
+        tariffId: tariff.id,
+        dateRange: {
+          from,
+          to: addDays(from, 1),
+        },
+      },
+    });
+  };
 
   return (
     <article className={styles.card}>
@@ -63,7 +90,7 @@ function TariffCard({ tariff }: { tariff: TariffEntry }) {
         <button
           type="button"
           className={styles.ctaBtn}
-          onClick={() => navigate('/')}
+          onClick={handleReserve}
         >
           Reservar →
         </button>
