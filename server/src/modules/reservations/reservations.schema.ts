@@ -6,11 +6,10 @@ const checkoutExtraSchema = z.object({
 });
 
 export const checkoutBodySchema = z.object({
-  categoryId: z.string().cuid(),
+  vehicleId: z.string().min(1),
   officeSlug: z.string().min(1),
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD'),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD'),
-  estimatedKm: z.number().int().positive(),
   extras: z.array(checkoutExtraSchema).default([]),
   client: z.object({
     firstName: z.string().min(1),

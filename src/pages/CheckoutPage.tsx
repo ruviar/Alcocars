@@ -1,28 +1,17 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
-import { addDays, differenceInCalendarDays, format, startOfToday } from 'date-fns';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type MouseEvent as ReactMouseEvent } from 'react';
+import { format, startOfToday } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { gsap } from 'gsap';
+import { DayPicker, type ClassNames, type DateRange } from 'react-day-picker';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useCategories } from '../hooks/useCategories';
-import {
-  CATEGORY_GROUPS,
-  CATEGORY_GROUP_LABELS,
-  groupCategories,
-  type Category,
-} from '../lib/categories';
 import { api } from '../lib/api';
-import { computePrice, type CategoryRates } from '../lib/pricing';
+import { useVehicles, type ApiVehicle } from '../hooks/useVehicles';
 import styles from './CheckoutPage.module.css';
 
 type CheckoutState = {
-  dateRange?: {
-    from?: Date | string;
-    to?: Date | string;
-  };
+  dateRange?: DateRange;
   location?: string;
-  categoryId?: string;
   vehicleType?: string;
-  estimatedKm?: number;
 };
 
 type ToggleExtraKey = 'snowChains' | 'additionalDriver';
@@ -35,19 +24,25 @@ type CustomerData = {
   email: string;
 };
 
-const LOCATIONS = ['Zaragoza', 'Tudela', 'Soria'] as const;
-
-const EXTRAS_CONFIG: Array<{
-  key: ToggleExtraKey;
-  apiKey: Exclude<CheckoutExtraKey, 'BABY_SEAT'>;
-  label: string;
-  pricePerDay: number;
-}> = [
-  { key: 'snowChains', apiKey: 'SNOW_CHAINS', label: 'Cadenas de nieve', pricePerDay: 5 },
-  { key: 'additionalDriver', apiKey: 'ADDITIONAL_DRIVER', label: 'Conductor adicional', pricePerDay: 10 },
+const EXTRAS_CONFIG: Array<{ key: ToggleExtraKey; label: string }> = [
+  { key: 'snowChains', label: 'Cadenas de nieve' },
+  { key: 'additionalDriver', label: 'Conductor adicional' },
 ];
 
-const BABY_SEAT_RATE_PER_DAY = 8;
+const EXTRAS_API_MAP: Record<ToggleExtraKey, CheckoutExtraKey> = {
+  snowChains: 'SNOW_CHAINS',
+  additionalDriver: 'ADDITIONAL_DRIVER',
+};
+
+const CATEGORY_MAP: Record<string, string> = {
+  Turismos: 'TURISMOS',
+  Furgonetas: 'FURGONETAS',
+  '4×4': 'SUV_4X4',
+  Autocaravanas: 'AUTOCARAVANAS',
+};
+
+const LOCATIONS = ['Zaragoza', 'Tudela', 'Soria'] as const;
+const VEHICLE_TYPES = ['Cualquier tipo', 'Turismos', 'Furgonetas', '4×4', 'Autocaravanas'] as const;
 
 const initialCustomerData: CustomerData = {
   nombre: '',
@@ -61,188 +56,97 @@ const initialExtrasState: Record<ToggleExtraKey, boolean> = {
   additionalDriver: false,
 };
 
-function toValidDate(value: unknown): Date | null {
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return value;
-  }
-
-  if (typeof value === 'string') {
-    const parsed = new Date(value);
-    if (!Number.isNaN(parsed.getTime())) {
-      return parsed;
-    }
-  }
-
-  return null;
+function capitalizeFirst(value: string) {
+  if (!value) return value;
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-function parseDateInput(value: string): Date | null {
-  const [year, month, day] = value.split('-').map(Number);
-  if (!year || !month || !day) return null;
-
-  const parsed = new Date(year, month - 1, day);
-  if (Number.isNaN(parsed.getTime())) return null;
-
-  return parsed;
-}
-
-function toInputDate(value: Date): string {
-  return format(value, 'yyyy-MM-dd');
-}
-
-function toOfficeSlug(value: string): string {
-  return value.toLowerCase().trim();
-}
-
-function toEuros(value: number): string {
-  return `${value.toFixed(2)} €`;
-}
-
-function toCategoryRates(category: Category): CategoryRates {
-  return {
-    price1Day: category.price1Day,
-    price2Day: category.price2Day,
-    price3Day: category.price3Day,
-    price4Day: category.price4Day,
-    price5Day: category.price5Day,
-    price6Day: category.price6Day,
-    price7Day: category.price7Day,
-    extraKmRate: category.extraKmRate,
-    deposit: category.deposit,
-    franchise: category.franchise,
-  };
-}
-
-function formatDateRangeLabel(startDate: Date, endDate: Date, totalDays: number): string {
-  const startLabel = format(startDate, 'd MMM', { locale: es });
-  const endLabel = format(endDate, 'd MMM', { locale: es });
-  const suffix = totalDays === 1 ? 'día' : 'días';
-
-  return `Del ${startLabel} al ${endLabel} (${totalDays} ${suffix})`;
+function formatDateRangeLabel(dateRange: DateRange | undefined) {
+  if (!dateRange?.from) return 'Fechas por confirmar';
+  const fromLabel = capitalizeFirst(format(dateRange.from, 'd MMM', { locale: es }));
+  const toDate = dateRange.to ?? dateRange.from;
+  const toLabel = capitalizeFirst(format(toDate, 'd MMM', { locale: es }));
+  return `Del ${fromLabel} al ${toLabel}`;
 }
 
 export default function CheckoutPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
   const pageRef = useRef<HTMLElement>(null);
-  const summaryRef = useRef<HTMLElement>(null);
-  const formRef = useRef<HTMLElement>(null);
+  const summaryRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLDivElement>(null);
+  const vehicleDialogRef = useRef<HTMLDialogElement>(null);
 
-  const bookingState = state as CheckoutState | null;
-  const hasSearchState = Boolean(bookingState);
-
-  const today = startOfToday();
-  const initialStartDate = toValidDate(bookingState?.dateRange?.from) ?? today;
-  const initialEndDateCandidate = toValidDate(bookingState?.dateRange?.to);
-  const initialEndDate =
-    initialEndDateCandidate && initialEndDateCandidate > initialStartDate
-      ? initialEndDateCandidate
-      : addDays(initialStartDate, 1);
-
-  const initialLocation =
-    bookingState?.location && LOCATIONS.some((location) => location === bookingState.location)
-      ? bookingState.location
-      : 'Zaragoza';
-
-  const initialEstimatedKm =
-    Number.isInteger(bookingState?.estimatedKm) && (bookingState?.estimatedKm ?? 0) > 0
-      ? (bookingState?.estimatedKm as number)
-      : 200;
-
-  const [pickupLocation, setPickupLocation] = useState<string>(initialLocation);
-  const [startDate, setStartDate] = useState<Date>(initialStartDate);
-  const [endDate, setEndDate] = useState<Date>(initialEndDate);
-  const [categoryId, setCategoryId] = useState<string>(bookingState?.categoryId ?? '');
-  const [estimatedKm, setEstimatedKm] = useState<number>(initialEstimatedKm);
   const [customerData, setCustomerData] = useState<CustomerData>(initialCustomerData);
   const [extras, setExtras] = useState<Record<ToggleExtraKey, boolean>>(initialExtrasState);
   const [babySeatQty, setBabySeatQty] = useState(0);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
+  const [detailVehicleId, setDetailVehicleId] = useState<ApiVehicle['id'] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [confirmationCode, setConfirmationCode] = useState<string | null>(null);
-  const [confirmationTotal, setConfirmationTotal] = useState<number | null>(null);
 
-  const {
-    data: categories,
-    loading: categoriesLoading,
-    error: categoriesError,
-  } = useCategories();
+  const bookingState = state as CheckoutState | null;
 
-  const groupedCategories = useMemo(
-    () => (categories ? groupCategories(categories) : null),
-    [categories],
+  const hasSearchState = Boolean(
+    bookingState?.location && bookingState?.vehicleType && bookingState?.dateRange?.from,
   );
 
-  const selectedCategory = useMemo(
-    () => categories?.find((category) => category.id === categoryId) ?? null,
-    [categories, categoryId],
+  // Editable search params — initialised from router state
+  const [editLocation, setEditLocation] = useState<string>(bookingState?.location ?? 'Zaragoza');
+  const [editDateRange, setEditDateRange] = useState<DateRange | undefined>(bookingState?.dateRange);
+  const [editVehicleType, setEditVehicleType] = useState<string>(bookingState?.vehicleType ?? 'Cualquier tipo');
+  const [openSummaryDropdown, setOpenSummaryDropdown] = useState<'location' | 'category' | null>(null);
+  const [isSummaryDateOpen, setIsSummaryDateOpen] = useState(false);
+
+  const officeSlug = editLocation.toLowerCase();
+  const apiCategory = editVehicleType !== 'Cualquier tipo' ? CATEGORY_MAP[editVehicleType] : undefined;
+  const startDateStr = editDateRange?.from ? format(editDateRange.from, 'yyyy-MM-dd') : '';
+  const endDateStr = editDateRange?.to ? format(editDateRange.to, 'yyyy-MM-dd') : startDateStr;
+
+  const vehicleParams = hasSearchState && startDateStr
+    ? { officeSlug, startDate: startDateStr, endDate: endDateStr, category: apiCategory }
+    : null;
+
+  const { vehicles, isLoading: vehiclesLoading, error: vehiclesError } = useVehicles(vehicleParams);
+
+  const selectedVehicle = useMemo(
+    () => vehicles?.find((vehicle) => vehicle.id === selectedVehicleId) ?? null,
+    [vehicles, selectedVehicleId],
   );
+
+  const detailVehicle = useMemo(
+    () => vehicles?.find((vehicle) => vehicle.id === detailVehicleId) ?? null,
+    [vehicles, detailVehicleId],
+  );
+
+  const maxBabySeats = selectedVehicle ? Math.max(selectedVehicle.seats - 1, 0) : 0;
+  const isBabySeatDisabled = !selectedVehicle;
+
+  // Auto-select first vehicle when list loads
+  useEffect(() => {
+    if (vehicles && vehicles.length > 0 && !selectedVehicleId) {
+      setSelectedVehicleId(vehicles[0].id);
+    }
+  }, [vehicles, selectedVehicleId]);
 
   useEffect(() => {
-    if (categoryId || !categories || !bookingState?.vehicleType) {
+    if (!selectedVehicle) {
+      setBabySeatQty(0);
       return;
     }
+    setBabySeatQty((prev) => Math.min(prev, maxBabySeats));
+  }, [selectedVehicle, maxBabySeats]);
 
-    const legacyTypeToGroup: Record<string, (typeof CATEGORY_GROUPS)[number]> = {
-      Turismos: 'COCHE',
-      Furgonetas: 'FURGONETA_CARGA',
-      '4×4': 'TODOTERRENO',
-      '4x4': 'TODOTERRENO',
-      Autocaravanas: 'TODOTERRENO',
-    };
-
-    const targetGroup = legacyTypeToGroup[bookingState.vehicleType];
-    if (!targetGroup) {
-      return;
-    }
-
-    const fallbackCategory = categories.find((category) => category.group === targetGroup);
-    if (fallbackCategory) {
-      setCategoryId(fallbackCategory.id);
-    }
-  }, [bookingState?.vehicleType, categories, categoryId]);
-
-  const totalDays = useMemo(
-    () => differenceInCalendarDays(endDate, startDate),
-    [startDate, endDate],
-  );
-
-  const normalizedEstimatedKm = useMemo(() => {
-    if (!Number.isFinite(estimatedKm)) return 0;
-    return Math.max(0, Math.floor(estimatedKm));
-  }, [estimatedKm]);
-
-  const extrasTotal = useMemo(() => {
-    if (totalDays < 1) return 0;
-
-    const toggledExtrasPerDay = EXTRAS_CONFIG.reduce((sum, extra) => {
-      return sum + (extras[extra.key] ? extra.pricePerDay : 0);
-    }, 0);
-
-    const totalPerDay = toggledExtrasPerDay + babySeatQty * BABY_SEAT_RATE_PER_DAY;
-    return totalPerDay * totalDays;
-  }, [babySeatQty, extras, totalDays]);
-
-  const priceBreakdown = useMemo(() => {
-    if (!selectedCategory) return null;
-    if (totalDays < 1) return null;
-    if (normalizedEstimatedKm <= 0) return null;
-
-    try {
-      return computePrice({
-        category: toCategoryRates(selectedCategory),
-        days: totalDays,
-        estimatedKm: normalizedEstimatedKm,
-        extrasTotal,
-      });
-    } catch {
-      return null;
-    }
-  }, [selectedCategory, totalDays, normalizedEstimatedKm, extrasTotal]);
+  useEffect(() => {
+    if (!detailVehicleId || detailVehicle) return;
+    vehicleDialogRef.current?.close();
+    setDetailVehicleId(null);
+  }, [detailVehicleId, detailVehicle]);
 
   const formattedDates = useMemo(
-    () => formatDateRangeLabel(startDate, endDate, Math.max(totalDays, 0)),
-    [startDate, endDate, totalDays],
+    () => formatDateRangeLabel(editDateRange),
+    [editDateRange],
   );
 
   useEffect(() => {
@@ -256,7 +160,6 @@ export default function CheckoutPage() {
           { y: 0, autoAlpha: 1, duration: 0.75, ease: 'power3.out' },
         );
       }
-
       if (formRef.current) {
         gsap.fromTo(
           formRef.current,
@@ -269,7 +172,60 @@ export default function CheckoutPage() {
     return () => ctx.revert();
   }, [hasSearchState]);
 
-  const handleCustomerInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    if (!isSummaryDateOpen && !openSummaryDropdown) return;
+
+    const handleOutside = (e: MouseEvent) => {
+      if (!(e.target instanceof Element)) return;
+      if (e.target.closest('[data-summary-select]') || e.target.closest('[data-summary-date]')) return;
+      setOpenSummaryDropdown(null);
+      setIsSummaryDateOpen(false);
+    };
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpenSummaryDropdown(null);
+        setIsSummaryDateOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleOutside);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [isSummaryDateOpen, openSummaryDropdown]);
+
+  const handleEditLocation = (loc: string) => {
+    setEditLocation(loc);
+    setSelectedVehicleId(null);
+    setOpenSummaryDropdown(null);
+  };
+
+  const handleEditVehicleType = (type: string) => {
+    setEditVehicleType(type);
+    setSelectedVehicleId(null);
+    setOpenSummaryDropdown(null);
+  };
+
+  const handleEditDateRange = (range: DateRange | undefined) => {
+    setEditDateRange(range);
+    if (range?.from && range?.to) {
+      setSelectedVehicleId(null);
+      setIsSummaryDateOpen(false);
+    }
+  };
+
+  const toggleSummaryDropdown = (key: 'location' | 'category') => {
+    setIsSummaryDateOpen(false);
+    setOpenSummaryDropdown((prev) => (prev === key ? null : key));
+  };
+
+  const toggleSummaryDate = () => {
+    setOpenSummaryDropdown(null);
+    setIsSummaryDateOpen((prev) => !prev);
+  };
+
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setCustomerData((prev) => ({ ...prev, [name]: value }));
     if (submitError) setSubmitError(null);
@@ -279,86 +235,60 @@ export default function CheckoutPage() {
     setExtras((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleStartDateChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const parsed = parseDateInput(event.target.value);
-    if (!parsed) return;
-
-    setStartDate(parsed);
-
-    if (differenceInCalendarDays(endDate, parsed) < 1) {
-      setEndDate(addDays(parsed, 1));
-    }
-
-    setSubmitError(null);
+  const handleDecreaseBabySeatQty = () => {
+    setBabySeatQty((prev) => Math.max(prev - 1, 0));
   };
 
-  const handleEndDateChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const parsed = parseDateInput(event.target.value);
-    if (!parsed) return;
-
-    setEndDate(parsed);
-    setSubmitError(null);
+  const handleIncreaseBabySeatQty = () => {
+    setBabySeatQty((prev) => Math.min(prev + 1, maxBabySeats));
   };
 
-  const handleEstimatedKmChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    if (!value) {
-      setEstimatedKm(0);
-      return;
+  const handleOpenVehicleDetails = (vehicle: ApiVehicle) => {
+    setDetailVehicleId(vehicle.id);
+    if (!vehicleDialogRef.current?.open) {
+      vehicleDialogRef.current?.showModal();
     }
+  };
 
-    setEstimatedKm(Math.max(0, Math.floor(Number(value))));
-    setSubmitError(null);
+  const handleCloseVehicleDetails = () => {
+    vehicleDialogRef.current?.close();
+    setDetailVehicleId(null);
+  };
+
+  const handleVehicleDialogBackdropClick = (event: ReactMouseEvent<HTMLDialogElement>) => {
+    if (event.target === event.currentTarget) {
+      handleCloseVehicleDetails();
+    }
+  };
+
+  const handleSelectVehicleFromDialog = (vehicle: ApiVehicle) => {
+    setSelectedVehicleId(vehicle.id);
+    handleCloseVehicleDetails();
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (isLoading) return;
-
-    if (!categoryId) {
-      setSubmitError('Selecciona una categoría para continuar.');
-      return;
-    }
-
-    if (totalDays < 1) {
-      setSubmitError('La fecha de devolución debe ser posterior a la de recogida.');
-      return;
-    }
-
-    if (totalDays > 7) {
-      setSubmitError('La tarifa online está disponible para reservas de 1 a 7 días.');
-      return;
-    }
-
-    if (!Number.isInteger(normalizedEstimatedKm) || normalizedEstimatedKm <= 0) {
-      setSubmitError('Introduce kilómetros previstos válidos (entero mayor que 0).');
-      return;
-    }
-
-    const selectedExtras: Array<{ key: CheckoutExtraKey; quantity: number }> = [];
-
-    if (babySeatQty > 0) {
-      selectedExtras.push({ key: 'BABY_SEAT', quantity: babySeatQty });
-    }
-
-    EXTRAS_CONFIG.forEach((extra) => {
-      if (extras[extra.key]) {
-        selectedExtras.push({ key: extra.apiKey, quantity: 1 });
-      }
-    });
+    if (isLoading || !selectedVehicleId) return;
 
     setIsLoading(true);
     setSubmitError(null);
 
+    const selectedExtras = (Object.keys(extras) as ToggleExtraKey[])
+      .filter((k) => extras[k])
+      .map((k) => ({ key: EXTRAS_API_MAP[k], quantity: 1 }));
+
+    if (babySeatQty > 0) {
+      selectedExtras.unshift({ key: 'BABY_SEAT', quantity: babySeatQty });
+    }
+
     try {
-      const result = await api.post<{ confirmationCode: string; reservationId: string; totalAmount: number }>(
+      const result = await api.post<{ confirmationCode: string; reservationId: string }>(
         '/api/reservations/checkout',
         {
-          categoryId,
-          officeSlug: toOfficeSlug(pickupLocation),
-          startDate: toInputDate(startDate),
-          endDate: toInputDate(endDate),
-          estimatedKm: normalizedEstimatedKm,
+          vehicleId: selectedVehicleId,
+          officeSlug,
+          startDate: startDateStr,
+          endDate: endDateStr,
           extras: selectedExtras,
           client: {
             firstName: customerData.nombre,
@@ -368,24 +298,43 @@ export default function CheckoutPage() {
           },
         },
       );
-
       setConfirmationCode(result.confirmationCode);
-      setConfirmationTotal(result.totalAmount);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Error al procesar la reserva';
-
-      if (msg === 'CATEGORY_NOT_FOUND') {
-        setSubmitError('La categoría seleccionada ya no está disponible.');
-      } else if (msg === 'OFFICE_NOT_FOUND') {
-        setSubmitError('No hemos encontrado la oficina seleccionada.');
-      } else if (msg === 'INVALID_DATE_RANGE' || msg === 'INVALID_DAY_RANGE') {
-        setSubmitError('Revisa el rango de fechas. Solo se admiten reservas de 1 a 7 días.');
-      } else {
-        setSubmitError(msg);
-      }
+      setSubmitError(
+        msg === 'VEHICLE_NOT_AVAILABLE'
+          ? 'El vehículo ya no está disponible para estas fechas. Por favor, elige otro.'
+          : msg,
+      );
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const summaryDayPickerClassNames: Partial<ClassNames> = {
+    root: styles.rdpRoot,
+    months: styles.rdpMonths,
+    month: styles.rdpMonth,
+    month_caption: styles.rdpMonthCaption,
+    caption_label: styles.rdpCaptionLabel,
+    nav: styles.rdpNav,
+    button_previous: styles.rdpNavButton,
+    button_next: styles.rdpNavButton,
+    chevron: styles.rdpChevron,
+    month_grid: styles.rdpMonthGrid,
+    weekdays: styles.rdpWeekdays,
+    weekday: styles.rdpWeekday,
+    weeks: styles.rdpWeeks,
+    week: styles.rdpWeek,
+    day: styles.rdpDay,
+    day_button: styles.rdpDayButton,
+    disabled: styles.rdpDayDisabled,
+    outside: styles.rdpDayOutside,
+    today: styles.rdpDayToday,
+    selected: styles.rdpDaySelected,
+    range_start: styles.rdpRangeStart,
+    range_middle: styles.rdpRangeMiddle,
+    range_end: styles.rdpRangeEnd,
   };
 
   if (!hasSearchState) {
@@ -418,9 +367,6 @@ export default function CheckoutPage() {
             <div className={styles.confirmationBox}>
               <p className={styles.confirmationKicker}>Código de confirmación</p>
               <p className={styles.confirmationCode}>{confirmationCode}</p>
-              {confirmationTotal != null ? (
-                <p className={styles.confirmationText}>Importe confirmado: {toEuros(confirmationTotal)}</p>
-              ) : null}
               <p className={styles.confirmationText}>
                 Te enviaremos los detalles de tu reserva por email. Presenta este código en la oficina al recoger el vehículo.
               </p>
@@ -439,73 +385,182 @@ export default function CheckoutPage() {
           <h1 className={styles.title}>CHECKOUT</h1>
 
           <article className={styles.summaryCard}>
-            <div className={styles.summaryRow}>
-              <span className={styles.summaryLabel}>Recogida</span>
-              <span className={styles.summaryValue}>{pickupLocation}</span>
-            </div>
-
+            {/* Fechas */}
             <div className={styles.summaryRow}>
               <span className={styles.summaryLabel}>Fechas</span>
-              <span className={styles.summaryValue}>{formattedDates}</span>
+              <div className={styles.summaryControl} data-summary-date>
+                <button
+                  type="button"
+                  className={styles.summaryDateTrigger}
+                  aria-expanded={isSummaryDateOpen}
+                  onClick={toggleSummaryDate}
+                >
+                  <span>{formattedDates}</span>
+                  <svg
+                    className={`${styles.summaryChevron} ${isSummaryDateOpen ? styles.summaryChevronOpen : ''}`}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+                {isSummaryDateOpen && (
+                  <div className={styles.summaryDatePopover} role="dialog" aria-label="Seleccionar fechas">
+                    <DayPicker
+                      mode="range"
+                      locale={es}
+                      weekStartsOn={1}
+                      numberOfMonths={1}
+                      pagedNavigation
+                      showOutsideDays
+                      fixedWeeks
+                      selected={editDateRange}
+                      onSelect={handleEditDateRange}
+                      disabled={{ before: startOfToday() }}
+                      defaultMonth={editDateRange?.from ?? startOfToday()}
+                      classNames={summaryDayPickerClassNames}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
+            {/* Recogida */}
+            <div className={styles.summaryRow}>
+              <span className={styles.summaryLabel}>Recogida</span>
+              <div className={styles.summaryControl} data-summary-select>
+                <button
+                  type="button"
+                  className={styles.summarySelectTrigger}
+                  aria-expanded={openSummaryDropdown === 'location'}
+                  onClick={() => toggleSummaryDropdown('location')}
+                >
+                  <span>{editLocation}</span>
+                  <svg
+                    className={`${styles.summaryChevron} ${openSummaryDropdown === 'location' ? styles.summaryChevronOpen : ''}`}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+                {openSummaryDropdown === 'location' && (
+                  <ul className={styles.summaryDropdownMenu} role="listbox" aria-label="Ciudades de recogida">
+                    {LOCATIONS.map((city) => (
+                      <li key={city}>
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={editLocation === city}
+                          className={`${styles.summaryDropdownItem} ${editLocation === city ? styles.summaryDropdownItemActive : ''}`}
+                          onClick={() => handleEditLocation(city)}
+                        >
+                          {city}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+
+            {/* Categoría */}
             <div className={styles.summaryRow}>
               <span className={styles.summaryLabel}>Categoría</span>
-              <span className={styles.summaryValue}>{selectedCategory?.name ?? 'Selecciona categoría'}</span>
-            </div>
-
-            <div className={styles.summaryRow}>
-              <span className={styles.summaryLabel}>Km previstos</span>
-              <span className={styles.summaryValue}>{normalizedEstimatedKm} km</span>
+              <div className={styles.summaryControl} data-summary-select>
+                <button
+                  type="button"
+                  className={styles.summarySelectTrigger}
+                  aria-expanded={openSummaryDropdown === 'category'}
+                  onClick={() => toggleSummaryDropdown('category')}
+                >
+                  <span>{editVehicleType}</span>
+                  <svg
+                    className={`${styles.summaryChevron} ${openSummaryDropdown === 'category' ? styles.summaryChevronOpen : ''}`}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+                {openSummaryDropdown === 'category' && (
+                  <ul className={styles.summaryDropdownMenu} role="listbox" aria-label="Categorías de vehículo">
+                    {VEHICLE_TYPES.map((type) => (
+                      <li key={type}>
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={editVehicleType === type}
+                          className={`${styles.summaryDropdownItem} ${editVehicleType === type ? styles.summaryDropdownItemActive : ''}`}
+                          onClick={() => handleEditVehicleType(type)}
+                        >
+                          {type}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           </article>
 
-          <article className={styles.extrasCard}>
-            <h2 className={styles.extrasTitle}>Desglose de precio</h2>
-            {categoriesLoading && <p className={styles.extrasText}>Cargando tarifas de categoría...</p>}
-            {categoriesError && !categoriesLoading && (
-              <p className={styles.errorText}>No se pudieron cargar las tarifas: {categoriesError}</p>
+          <article className={styles.vehiclesCard}>
+            <h2 className={styles.extrasTitle}>Elige tu vehículo</h2>
+            {vehiclesLoading && (
+              <p className={styles.vehicleLoading}>
+                <span className={styles.spinner} aria-hidden="true" />
+                Buscando disponibilidad...
+              </p>
             )}
-
-            {!categoriesLoading && !categoriesError && !selectedCategory && (
-              <p className={styles.extrasText}>Selecciona una categoría para ver el precio en vivo.</p>
+            {vehiclesError && (
+              <p className={styles.errorText}>Error al cargar vehículos: {vehiclesError}</p>
             )}
-
-            {!categoriesLoading && !categoriesError && selectedCategory && !priceBreakdown && (
-              <p className={styles.extrasText}>Completa fechas y kilómetros para calcular el precio.</p>
+            {!vehiclesLoading && vehicles && vehicles.length === 0 && (
+              <p className={styles.extrasText}>No hay vehículos disponibles para estas fechas.</p>
             )}
-
-            {priceBreakdown && (
-              <div className={styles.priceBreakdown}>
-                <div className={styles.priceRow}>
-                  <span>Tarifa base ({priceBreakdown.days} días)</span>
-                  <strong>{toEuros(priceBreakdown.baseRate)}</strong>
-                </div>
-                <div className={styles.priceRow}>
-                  <span>Km incluidos</span>
-                  <strong>{priceBreakdown.includedKm} km</strong>
-                </div>
-                <div className={styles.priceRow}>
-                  <span>Km extra</span>
-                  <strong>{priceBreakdown.extraKm} km</strong>
-                </div>
-                <div className={styles.priceRow}>
-                  <span>Sobrecoste km extra</span>
-                  <strong>{toEuros(priceBreakdown.extraKmCharge)}</strong>
-                </div>
-                <div className={styles.priceRow}>
-                  <span>Extras</span>
-                  <strong>{toEuros(priceBreakdown.extrasTotal)}</strong>
-                </div>
-                <div className={`${styles.priceRow} ${styles.priceTotal}`}>
-                  <span>TOTAL</span>
-                  <strong>{toEuros(priceBreakdown.totalAmount)}</strong>
-                </div>
-
-                <div className={styles.depositNotice}>
-                  <p><strong>Fianza:</strong> {toEuros(priceBreakdown.deposit)}</p>
-                  <p><strong>Franquicia:</strong> {toEuros(priceBreakdown.franchise)}</p>
-                </div>
+            {vehicles && vehicles.length > 0 && (
+              <div className={styles.vehicleList}>
+                {vehicles.map((v) => (
+                  <div
+                    key={v.id}
+                    className={`${styles.vehicleItem} ${selectedVehicleId === v.id ? styles.vehicleItemSelected : ''}`}
+                  >
+                    <label className={styles.vehicleSelectLabel}>
+                      <input
+                        type="radio"
+                        name="vehicleId"
+                        value={v.id}
+                        checked={selectedVehicleId === v.id}
+                        onChange={() => setSelectedVehicleId(v.id)}
+                        className={styles.vehicleRadio}
+                      />
+                      <span className={styles.vehicleName}>{v.brand} {v.model}</span>
+                      <span className={styles.vehicleRate}>€{Number(v.dailyRate).toFixed(0)}/día</span>
+                    </label>
+                    <button
+                      type="button"
+                      className={styles.vehicleDetailsBtn}
+                      onClick={() => handleOpenVehicleDetails(v)}
+                    >
+                      Ver detalles
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </article>
@@ -517,14 +572,18 @@ export default function CheckoutPage() {
               <div className={styles.extraItem}>
                 <div className={styles.babySeatLeft}>
                   <span className={styles.extraLabel}>Silla de bebé</span>
-                  <span className={styles.babySeatHint}>Hasta 6 unidades (8 €/día por unidad)</span>
+                  <span className={styles.babySeatHint}>
+                    {selectedVehicle
+                      ? `Máximo ${maxBabySeats} silla${maxBabySeats === 1 ? '' : 's'} para este vehículo`
+                      : 'Selecciona un vehículo para habilitar este extra'}
+                  </span>
                 </div>
                 <div className={styles.babySeatCounter} aria-live="polite">
                   <button
                     type="button"
                     className={styles.babySeatBtn}
-                    onClick={() => setBabySeatQty((prev) => Math.max(prev - 1, 0))}
-                    disabled={babySeatQty === 0}
+                    onClick={handleDecreaseBabySeatQty}
+                    disabled={isBabySeatDisabled || babySeatQty === 0}
                     aria-label="Reducir sillas de bebé"
                   >
                     -
@@ -533,8 +592,8 @@ export default function CheckoutPage() {
                   <button
                     type="button"
                     className={styles.babySeatBtn}
-                    onClick={() => setBabySeatQty((prev) => Math.min(prev + 1, 6))}
-                    disabled={babySeatQty >= 6}
+                    onClick={handleIncreaseBabySeatQty}
+                    disabled={isBabySeatDisabled || babySeatQty >= maxBabySeats}
                     aria-label="Aumentar sillas de bebé"
                   >
                     +
@@ -544,9 +603,7 @@ export default function CheckoutPage() {
 
               {EXTRAS_CONFIG.map((extra) => (
                 <label key={extra.key} className={styles.extraItem}>
-                  <span className={styles.extraLabel}>
-                    {extra.label} ({extra.pricePerDay} €/día)
-                  </span>
+                  <span className={styles.extraLabel}>{extra.label}</span>
                   <input
                     className={styles.extraInput}
                     type="checkbox"
@@ -560,91 +617,76 @@ export default function CheckoutPage() {
               ))}
             </div>
           </article>
+
+          <dialog
+            ref={vehicleDialogRef}
+            className={styles.vehicleModal}
+            onClick={handleVehicleDialogBackdropClick}
+            onClose={() => setDetailVehicleId(null)}
+          >
+            {detailVehicle && (
+              <>
+                <button
+                  type="button"
+                  className={styles.vehicleModalClose}
+                  onClick={handleCloseVehicleDetails}
+                  aria-label="Cerrar detalles del vehículo"
+                >
+                  ×
+                </button>
+                <img
+                  src={detailVehicle.imageUrl}
+                  alt={`${detailVehicle.brand} ${detailVehicle.model}`}
+                  className={styles.vehicleModalImage}
+                />
+                <div className={styles.vehicleModalBody}>
+                  <header className={styles.vehicleModalHeader}>
+                    <h3 className={styles.vehicleModalTitle}>{detailVehicle.brand} {detailVehicle.model}</h3>
+                    <p className={styles.vehicleModalBadge}>{detailVehicle.highlight}</p>
+                  </header>
+
+                  <ul className={styles.vehicleModalSpecs}>
+                    <li className={styles.vehicleModalSpecItem}>
+                      <span className={styles.vehicleModalSpecLabel}>Potencia</span>
+                      <span className={styles.vehicleModalSpecValue}>{detailVehicle.power}</span>
+                    </li>
+                    <li className={styles.vehicleModalSpecItem}>
+                      <span className={styles.vehicleModalSpecLabel}>Plazas</span>
+                      <span className={styles.vehicleModalSpecValue}>{detailVehicle.seats}</span>
+                    </li>
+                    <li className={styles.vehicleModalSpecItem}>
+                      <span className={styles.vehicleModalSpecLabel}>Combustible</span>
+                      <span className={styles.vehicleModalSpecValue}>{detailVehicle.fuelType}</span>
+                    </li>
+                    <li className={styles.vehicleModalSpecItem}>
+                      <span className={styles.vehicleModalSpecLabel}>Transmisión</span>
+                      <span className={styles.vehicleModalSpecValue}>{detailVehicle.transmissionType}</span>
+                    </li>
+                    <li className={styles.vehicleModalSpecItem}>
+                      <span className={styles.vehicleModalSpecLabel}>Descripción</span>
+                      <span className={styles.vehicleModalSpecValue}>{detailVehicle.highlight}</span>
+                    </li>
+                    <li className={styles.vehicleModalSpecItem}>
+                      <span className={styles.vehicleModalSpecLabel}>Precio diario</span>
+                      <span className={styles.vehicleModalSpecValue}>€{Number(detailVehicle.dailyRate).toFixed(0)}/día</span>
+                    </li>
+                  </ul>
+
+                  <button
+                    type="button"
+                    className={styles.vehicleModalSelectBtn}
+                    onClick={() => handleSelectVehicleFromDialog(detailVehicle)}
+                  >
+                    {selectedVehicleId === detailVehicle.id ? 'Vehículo seleccionado' : 'Seleccionar este vehículo'}
+                  </button>
+                </div>
+              </>
+            )}
+          </dialog>
         </section>
 
         <section ref={formRef} className={styles.formColumn} aria-label="Tus datos de reserva">
           <form className={styles.formCard} onSubmit={handleSubmit}>
-            <h2 className={styles.formTitle}>Configura tu alquiler</h2>
-
-            <div className={styles.fieldGrid}>
-              <label className={styles.field}>
-                <span>Oficina</span>
-                <select value={pickupLocation} onChange={(event) => setPickupLocation(event.target.value)}>
-                  {LOCATIONS.map((location) => (
-                    <option key={location} value={location}>
-                      {location}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className={styles.field}>
-                <span>Categoría</span>
-                <select
-                  value={categoryId}
-                  onChange={(event) => setCategoryId(event.target.value)}
-                  disabled={categoriesLoading}
-                  required
-                >
-                  <option value="" disabled>
-                    {categoriesLoading ? 'Cargando categorías...' : 'Selecciona categoría'}
-                  </option>
-                  {groupedCategories
-                    ? CATEGORY_GROUPS.map((group) => {
-                        const rows = groupedCategories[group];
-                        if (!rows?.length) return null;
-
-                        return (
-                          <optgroup key={group} label={CATEGORY_GROUP_LABELS[group]}>
-                            {rows.map((category) => (
-                              <option key={category.id} value={category.id}>
-                                {category.name}
-                              </option>
-                            ))}
-                          </optgroup>
-                        );
-                      })
-                    : null}
-                </select>
-              </label>
-
-              <label className={styles.field}>
-                <span>Recogida</span>
-                <input
-                  type="date"
-                  value={toInputDate(startDate)}
-                  min={toInputDate(today)}
-                  onChange={handleStartDateChange}
-                  required
-                />
-              </label>
-
-              <label className={styles.field}>
-                <span>Devolución</span>
-                <input
-                  type="date"
-                  value={toInputDate(endDate)}
-                  min={toInputDate(addDays(startDate, 1))}
-                  onChange={handleEndDateChange}
-                  required
-                />
-              </label>
-
-              <label className={styles.field}>
-                <span>Km previstos</span>
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={normalizedEstimatedKm}
-                  onChange={handleEstimatedKmChange}
-                  required
-                />
-              </label>
-            </div>
-
-            <p className={styles.hintText}>La tarifa online aplica para periodos de 1 a 7 días.</p>
-
             <h2 className={styles.formTitle}>Tus datos</h2>
 
             <label className={styles.field}>
@@ -653,7 +695,7 @@ export default function CheckoutPage() {
                 type="text"
                 name="nombre"
                 value={customerData.nombre}
-                onChange={handleCustomerInputChange}
+                onChange={handleInputChange}
                 placeholder="Tu nombre"
                 required
               />
@@ -665,7 +707,7 @@ export default function CheckoutPage() {
                 type="text"
                 name="apellidos"
                 value={customerData.apellidos}
-                onChange={handleCustomerInputChange}
+                onChange={handleInputChange}
                 placeholder="Tus apellidos"
                 required
               />
@@ -677,7 +719,7 @@ export default function CheckoutPage() {
                 type="tel"
                 name="telefono"
                 value={customerData.telefono}
-                onChange={handleCustomerInputChange}
+                onChange={handleInputChange}
                 placeholder="+34 600 000 000"
                 required
               />
@@ -689,7 +731,7 @@ export default function CheckoutPage() {
                 type="email"
                 name="email"
                 value={customerData.email}
-                onChange={handleCustomerInputChange}
+                onChange={handleInputChange}
                 placeholder="tu@email.com"
                 required
               />
@@ -698,14 +740,7 @@ export default function CheckoutPage() {
             <button
               type="submit"
               className={styles.submitButton}
-              disabled={
-                isLoading ||
-                categoriesLoading ||
-                !categoryId ||
-                totalDays < 1 ||
-                totalDays > 7 ||
-                normalizedEstimatedKm <= 0
-              }
+              disabled={isLoading || !selectedVehicleId || vehiclesLoading}
             >
               {isLoading ? (
                 <span className={styles.loadingWrap}>

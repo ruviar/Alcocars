@@ -1,16 +1,6 @@
 const RAW_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001';
 const BASE = RAW_BASE.replace(/\/$/, '');
 
-type ApiErrorBody = {
-  error?: string;
-  details?: unknown;
-};
-
-type HttpError = Error & {
-  status?: number;
-  details?: unknown;
-};
-
 function buildUrl(path: string): string {
   if (/^https?:\/\//i.test(path)) {
     return path;
@@ -24,15 +14,13 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     headers: { 'Content-Type': 'application/json', ...init?.headers },
     ...init,
   });
-
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}) as ApiErrorBody);
-    const error = new Error(body.error ?? `HTTP ${res.status}`) as HttpError;
-    error.status = res.status;
-    error.details = body.details;
+    const body = await res.json().catch(() => ({}));
+    const error = new Error((body as any).error ?? `HTTP ${res.status}`);
+    (error as any).status = res.status;
+    (error as any).details = (body as any).details;
     throw error;
   }
-
   return res.json() as Promise<T>;
 }
 

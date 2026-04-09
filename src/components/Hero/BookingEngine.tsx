@@ -3,13 +3,12 @@ import { DayPicker, type ClassNames, type DateRange } from 'react-day-picker';
 import { addDays, format, startOfToday } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
-import { useCategories } from '../../hooks/useCategories';
-import { CATEGORY_GROUPS, CATEGORY_GROUP_LABELS } from '../../lib/categories';
 import styles from './BookingEngine.module.css';
 
 const locations = ['Zaragoza', 'Tudela', 'Soria'];
+const vehicleTypes = ['Cualquier tipo', 'Turismos', 'Furgonetas', '4×4', 'Autocaravanas'];
 
-type SelectDropdown = 'location' | null;
+type SelectDropdown = 'location' | 'type' | null;
 
 function getRangeLabel(range: DateRange | undefined) {
   if (range?.from && range?.to) {
@@ -31,13 +30,9 @@ export default function BookingEngine() {
     from: today,
     to: addDays(today, 1),
   }));
-  const [categoryId, setCategoryId] = useState('');
-  const [estimatedKm, setEstimatedKm] = useState<number>(200);
+  const [vehicleType, setVehicleType] = useState('Cualquier tipo');
   const [openDropdown, setOpenDropdown] = useState<SelectDropdown>(null);
   const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-
-  const { data: categories, loading: categoriesLoading } = useCategories();
 
   const rangeLabel = useMemo(() => getRangeLabel(dateRange), [dateRange]);
 
@@ -113,43 +108,14 @@ export default function BookingEngine() {
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setFormError(null);
-
-    if (!dateRange?.from) {
-      setFormError('Selecciona al menos la fecha de inicio.');
-      return;
-    }
-
-    if (!categoryId) {
-      setFormError('Selecciona una categoría de vehículo.');
-      return;
-    }
-
-    if (!estimatedKm || estimatedKm <= 0 || !Number.isInteger(estimatedKm)) {
-      setFormError('Introduce los kilómetros previstos (número entero mayor que 0).');
-      return;
-    }
-
     navigate('/reserva', {
       state: {
-        categoryId,
         dateRange,
         location,
-        estimatedKm,
+        vehicleType,
       },
     });
   };
-
-  // Group categories by their group key for optgroup rendering
-  const groupedCategories = useMemo(() => {
-    if (!categories) return null;
-    const map: Partial<Record<string, typeof categories>> = {};
-    for (const cat of categories) {
-      if (!map[cat.group]) map[cat.group] = [];
-      map[cat.group]!.push(cat);
-    }
-    return map;
-  }, [categories]);
 
   return (
     <form className={styles.engine} onSubmit={handleSearch} role="search" aria-label="Motor de búsqueda de vehículos">
@@ -280,80 +246,65 @@ export default function BookingEngine() {
 
         <div className={styles.divider} />
 
-        {/* Category */}
+        {/* Vehicle type */}
         <div className={styles.field}>
-          <label className={styles.label} htmlFor="be-category">
+          <label className={styles.label}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="1" y="3" width="15" height="13"/>
               <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
               <circle cx="5.5" cy="18.5" r="2.5"/>
               <circle cx="18.5" cy="18.5" r="2.5"/>
             </svg>
-            Categoría
+            Vehículo
           </label>
 
-          <select
-            id="be-category"
-            className={styles.nativeSelect}
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-            disabled={categoriesLoading}
-            required
-            aria-label="Seleccionar categoría de vehículo"
-          >
-            <option value="" disabled>
-              {categoriesLoading ? 'Cargando categorías...' : 'Selecciona categoría'}
-            </option>
-            {groupedCategories
-              ? CATEGORY_GROUPS.map((group) => {
-                  const groupCats = groupedCategories[group];
-                  if (!groupCats || groupCats.length === 0) return null;
-                  return (
-                    <optgroup key={group} label={CATEGORY_GROUP_LABELS[group]}>
-                      {groupCats.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                  );
-                })
-              : null}
-          </select>
-        </div>
+          <div className={styles.customSelect} data-select-root>
+            <button
+              type="button"
+              className={styles.customSelectTrigger}
+              aria-haspopup="listbox"
+              aria-expanded={openDropdown === 'type'}
+              aria-label="Seleccionar tipo de vehículo"
+              onClick={() => toggleSelectDropdown('type')}
+            >
+              <span>{vehicleType}</span>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={`${styles.selectChevron} ${openDropdown === 'type' ? styles.selectChevronOpen : ''}`}
+                aria-hidden="true"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
 
-        <div className={styles.divider} />
-
-        {/* Estimated Km */}
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="be-estimated-km">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
-            Km previstos
-          </label>
-
-          <input
-            id="be-estimated-km"
-            type="number"
-            className={styles.numberInput}
-            value={estimatedKm}
-            onChange={(e) => setEstimatedKm(Math.floor(Number(e.target.value)))}
-            placeholder="200"
-            min="1"
-            required
-            aria-label="Kilómetros totales previstos"
-          />
-          <span className={styles.inputHint}>Km totales que prevés recorrer</span>
+            {openDropdown === 'type' ? (
+              <ul className={styles.dropdownMenu} role="listbox" aria-label="Tipos de vehículo">
+                {vehicleTypes.map((vehicleOption) => (
+                  <li key={vehicleOption}>
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={vehicleType === vehicleOption}
+                      className={`${styles.dropdownItem} ${vehicleType === vehicleOption ? styles.dropdownItemActive : ''}`}
+                      onClick={() => {
+                        setVehicleType(vehicleOption);
+                        setOpenDropdown(null);
+                      }}
+                    >
+                      {vehicleOption}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
         </div>
       </div>
-
-      {formError ? (
-        <p className={styles.formError} role="alert">
-          {formError}
-        </p>
-      ) : null}
 
       <button type="submit" className={styles.cta}>
         <span className={styles.ctaText}>Buscar</span>

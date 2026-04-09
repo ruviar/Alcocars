@@ -19,11 +19,10 @@ const schema = z.object({
     ),
   JWT_SECRET: z.string().min(1, 'JWT_SECRET is required'),
   SMTP_HOST: z.string().optional(),
-  SMTP_PORT: z.coerce.number().optional().default(587),
+  SMTP_PORT: z.coerce.number().optional(),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
-  SMTP_FROM: z.string().optional().default('noreply@alcocars.es'),
-  ADMIN_NOTIFICATION_EMAIL: z.string().email().optional(),
+  SMTP_FROM: z.string().optional(),
 });
 
 // Treat empty strings as absent (common in Docker/CI environments)

@@ -43,15 +43,10 @@ export function useVehicles(params: Params | null) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const officeSlug = params?.officeSlug;
-  const startDate = params?.startDate;
-  const endDate = params?.endDate;
-  const category = params?.category;
-
   useEffect(() => {
     let cancelled = false;
 
-    if (!officeSlug || !startDate || !endDate) {
+    if (!params) {
       setVehicles(null);
       setError(null);
       setIsLoading(false);
@@ -59,13 +54,13 @@ export function useVehicles(params: Params | null) {
     }
 
     const query = new URLSearchParams({
-      officeSlug,
-      startDate,
-      endDate,
+      officeSlug: params.officeSlug,
+      startDate: params.startDate,
+      endDate: params.endDate,
     });
 
-    if (category) {
-      query.set('category', category);
+    if (params.category) {
+      query.set('category', params.category);
     }
 
     setIsLoading(true);
@@ -107,7 +102,7 @@ export function useVehicles(params: Params | null) {
     return () => {
       cancelled = true;
     };
-  }, [officeSlug, startDate, endDate, category]);
+  }, [params?.officeSlug, params?.startDate, params?.endDate, params?.category]);
 
   return { vehicles, isLoading, loading: isLoading, error };
 }

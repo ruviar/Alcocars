@@ -1,78 +1,26 @@
-/* --- Fuentes corporativas locales --- */
-/* ⚠️  Los archivos .woff2 deben colocarse en public/fonts/ (véase public/fonts/README.md) */
-/* Mientras no estén disponibles, se usará el fallback system-ui               */
-@font-face {
-  font-family: 'Barracuda Script';
-  src: url('/fonts/barracuda-script.woff2') format('woff2');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Sisco';
-  src: url('/fonts/sisco.woff2') format('woff2');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Sisco';
-  src: url('/fonts/sisco-bold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Avant Garde';
-  src: url('/fonts/avant-garde.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Avant Garde';
-  src: url('/fonts/avant-garde-bold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 
 /* ─────────────────────────────────────────
    DESIGN TOKENS
 ───────────────────────────────────────── */
 :root {
-  /* --- Paleta corporativa Alcocars --- */
-  --color-primary-green: #97D700;   /* Pantone 375C — verde corporativo */
-  --color-primary-dark:  #012169;   /* Pantone 280C — azul oscuro corporativo */
-  --color-accent-red:    #E11D2E;   /* Para "Renting a medida" — obligatorio rojo */
-  --color-bg:            #FFFFFF;
-  --color-surface:       #F5F7FA;
-  --color-text:          #0B1F3A;
-  --color-text-soft:     #475569;
-  --color-border:        rgba(1, 33, 105, 0.12);
-  --color-border-accent: rgba(151, 215, 0, 0.40);
-  --color-error:         #c0392b;
-
-  /* Aliases backward-compat para módulos CSS que usen tokens antiguos */
-  --coal:     var(--color-bg);
+  --coal: #F9F9F9;
   --obsidian: #FFFFFF;
-  --graphite: var(--color-surface);
-  --silver:   var(--color-text-soft);
-  --chalk:    var(--color-primary-dark);
-  --accent:   var(--color-primary-green);
-  --accent-dim: #7cb800;
-  --glass:    rgba(1, 33, 105, 0.03);
-  --glass-strong: rgba(1, 33, 105, 0.08);
-  --border:   var(--color-border);
-  --border-accent: var(--color-border-accent);
-  --error:    var(--color-error);
-  --white:    #FFFFFF;
+  --graphite: #F1F1F1;
+  --silver: #5E6879;
+  --chalk: #012369;
+  --white: #FFFFFF;
+  --accent: #AFE23A;
+  --accent-dim: #8FBE2F;
+  --glass: rgba(255, 255, 255, 0.94);
+  --glass-strong: rgba(241, 241, 241, 0.96);
+  --border: rgba(1, 35, 105, 0.14);
+  --border-accent: rgba(175, 226, 58, 0.58);
+  --error: #c0392b;
 
-  /* --- Tipografías --- */
-  --font-logo:    'Barracuda Script', cursive;
-  --font-display: 'Sisco', 'Avant Garde', system-ui, sans-serif;
-  --font-body:    'Avant Garde', system-ui, sans-serif;
-  --font-mono:    'Space Mono', ui-monospace, monospace;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'Space Mono', monospace;
 
   --radius-sm: 4px;
   --radius-md: 12px;
@@ -109,9 +57,9 @@ html {
 }
 
 body {
+  background-color: var(--coal);
+  color: var(--chalk);
   font-family: var(--font-body);
-  color: var(--color-text);
-  background-color: var(--color-bg);
   line-height: 1.6;
   overflow-x: hidden;
 }
@@ -191,8 +139,8 @@ body::before {
 ───────────────────────────────────────── */
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(151, 215, 0, 0.24); }
-  50% { box-shadow: 0 0 40px rgba(151, 215, 0, 0.45); }
+  0%, 100% { box-shadow: 0 0 20px rgba(175, 226, 58, 0.24); }
+  50% { box-shadow: 0 0 40px rgba(175, 226, 58, 0.45); }
 }
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
