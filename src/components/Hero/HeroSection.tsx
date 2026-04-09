@@ -55,8 +55,8 @@ export default function HeroSection() {
       {/* Background */}
       <div ref={bgRef} className={styles.bg}>
         <img
-          src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1600&q=85"
-          alt="Premium vehicle fleet"
+          src="/images/fondo1.png"
+          alt="Moncayo nevado — flota Alocars"
           className={styles.bgImg}
         />
         <div className={styles.bgOverlay} />
@@ -74,19 +74,13 @@ export default function HeroSection() {
         {/* Tag */}
         <div ref={tagRef} className={styles.tag}>
           <span className={styles.tagDot} />
-          Renting premium · Aragón & Navarra
+          Renting Profesional · Aragón & Navarra
         </div>
 
-        {/* Headline - each line wrapped for GSAP reveal */}
+        {/* Headline - single line GSAP reveal */}
         <div ref={headlineRef} className={styles.headlineWrap}>
           <div className={styles.lineClip}>
-            <span className={`${styles.line} hero-line`}>El vehículo</span>
-          </div>
-          <div className={styles.lineClip}>
-            <span className={`${styles.line} hero-line ${styles.lineAccent}`}>que necesitas,</span>
-          </div>
-          <div className={styles.lineClip}>
-            <span className={`${styles.line} hero-line`}>cuando quieras.</span>
+            <h1 className={`${styles.line} ${styles.lineRed} hero-line`}>Renting a medida</h1>
           </div>
         </div>
 
