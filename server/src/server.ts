@@ -6,6 +6,7 @@ import { officesRouter } from './modules/offices/offices.router';
 import { vehiclesRouter } from './modules/vehicles/vehicles.router';
 import { reservationsRouter } from './modules/reservations/reservations.router';
 import { contactRouter } from './modules/contact/contact.router';
+import { categoriesRouter } from './modules/categories/categories.router';
 import { authRouter } from './modules/admin/auth/auth.router';
 import { adminRouter } from './modules/admin/admin.router';
 
@@ -42,6 +43,7 @@ export async function buildApp() {
   await app.register(vehiclesRouter, { prefix: '/api' });
   await app.register(reservationsRouter, { prefix: '/api' });
   await app.register(contactRouter, { prefix: '/api' });
+  await app.register(categoriesRouter, { prefix: '/api' });
 
   // Admin — auth login (public)
   await app.register(authRouter, { prefix: '/api/admin' });
