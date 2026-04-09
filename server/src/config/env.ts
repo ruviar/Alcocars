@@ -23,6 +23,7 @@ const schema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   SMTP_FROM: z.string().optional(),
+  NOTIFY_EMAIL: z.string().default('ruviar@gmail.com'),
 });
 
 // Treat empty strings as absent (common in Docker/CI environments)

@@ -6,9 +6,9 @@ import { useNavigate } from 'react-router-dom';
 import styles from './BookingEngine.module.css';
 
 const locations = ['Zaragoza', 'Tudela', 'Soria'];
-const vehicleTypes = ['Cualquier tipo', 'Turismos', 'Furgonetas', '4×4', 'Autocaravanas'];
+const rentalCategories = ['Cualquier gama', 'Turismos', 'Furgonetas', '4×4', 'Autocaravanas'];
 
-type SelectDropdown = 'location' | 'type' | null;
+type SelectDropdown = 'location' | 'category' | null;
 
 function getRangeLabel(range: DateRange | undefined) {
   if (range?.from && range?.to) {
@@ -30,7 +30,7 @@ export default function BookingEngine() {
     from: today,
     to: addDays(today, 1),
   }));
-  const [vehicleType, setVehicleType] = useState('Cualquier tipo');
+  const [rentalCategory, setRentalCategory] = useState('Cualquier gama');
   const [openDropdown, setOpenDropdown] = useState<SelectDropdown>(null);
   const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
 
@@ -112,7 +112,9 @@ export default function BookingEngine() {
       state: {
         dateRange,
         location,
-        vehicleType,
+        rentalCategory,
+        // Legacy compatibility for pages still reading vehicleType from state
+        vehicleType: rentalCategory,
       },
     });
   };
@@ -246,7 +248,7 @@ export default function BookingEngine() {
 
         <div className={styles.divider} />
 
-        {/* Vehicle type */}
+        {/* Rental category */}
         <div className={styles.field}>
           <label className={styles.label}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -255,7 +257,7 @@ export default function BookingEngine() {
               <circle cx="5.5" cy="18.5" r="2.5"/>
               <circle cx="18.5" cy="18.5" r="2.5"/>
             </svg>
-            Vehículo
+            Gama
           </label>
 
           <div className={styles.customSelect} data-select-root>
@@ -263,11 +265,11 @@ export default function BookingEngine() {
               type="button"
               className={styles.customSelectTrigger}
               aria-haspopup="listbox"
-              aria-expanded={openDropdown === 'type'}
-              aria-label="Seleccionar tipo de vehículo"
-              onClick={() => toggleSelectDropdown('type')}
+              aria-expanded={openDropdown === 'category'}
+              aria-label="Seleccionar gama de renting"
+              onClick={() => toggleSelectDropdown('category')}
             >
-              <span>{vehicleType}</span>
+              <span>{rentalCategory}</span>
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -275,28 +277,28 @@ export default function BookingEngine() {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className={`${styles.selectChevron} ${openDropdown === 'type' ? styles.selectChevronOpen : ''}`}
+                className={`${styles.selectChevron} ${openDropdown === 'category' ? styles.selectChevronOpen : ''}`}
                 aria-hidden="true"
               >
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
 
-            {openDropdown === 'type' ? (
-              <ul className={styles.dropdownMenu} role="listbox" aria-label="Tipos de vehículo">
-                {vehicleTypes.map((vehicleOption) => (
-                  <li key={vehicleOption}>
+            {openDropdown === 'category' ? (
+              <ul className={styles.dropdownMenu} role="listbox" aria-label="Gamas de renting">
+                {rentalCategories.map((categoryOption) => (
+                  <li key={categoryOption}>
                     <button
                       type="button"
                       role="option"
-                      aria-selected={vehicleType === vehicleOption}
-                      className={`${styles.dropdownItem} ${vehicleType === vehicleOption ? styles.dropdownItemActive : ''}`}
+                      aria-selected={rentalCategory === categoryOption}
+                      className={`${styles.dropdownItem} ${rentalCategory === categoryOption ? styles.dropdownItemActive : ''}`}
                       onClick={() => {
-                        setVehicleType(vehicleOption);
+                        setRentalCategory(categoryOption);
                         setOpenDropdown(null);
                       }}
                     >
-                      {vehicleOption}
+                      {categoryOption}
                     </button>
                   </li>
                 ))}

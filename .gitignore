@@ -27,3 +27,6 @@ server/.local-postgres/
 *.njsproj
 *.sln
 *.sw?
+
+# Claude internal ephemeral worktrees
+.claude/worktrees/
