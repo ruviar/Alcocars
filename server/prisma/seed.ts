@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { PrismaClient, VehicleCategory, FuelType, TransmissionType } from '@prisma/client';
+import { PrismaClient, CategoryGroup } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
 const databaseUrl = process.env.DATABASE_URL?.trim();
@@ -41,6 +41,8 @@ function printSeedHelp(error: unknown): void {
 
 const prisma = new PrismaClient();
 
+// ── Offices ──────────────────────────────────────────────────────────────────
+
 const officesData = [
   {
     slug: 'zaragoza',
@@ -77,234 +79,373 @@ const officesData = [
   },
 ];
 
-type VehicleInput = {
+// ── Categories ────────────────────────────────────────────────────────────────
+
+type CategoryInput = {
   slug: string;
   name: string;
-  brand: string;
-  category: VehicleCategory;
-  seats: number;
-  power: string;
-  fuel: FuelType;
-  transmission: TransmissionType;
-  dailyRate: number;
-  imageUrl: string;
+  group: CategoryGroup;
+  order: number;
+  price1Day: number;
+  price2Day: number;
+  price3Day: number;
+  price4Day: number;
+  price5Day: number;
+  price6Day: number;
+  price7Day: number;
+  extraKmRate: number;
+  deposit: number;
+  franchise: number;
+  powerMin: number; // TODO: confirm with client
+  powerMax: number; // TODO: confirm with client
+  seatsMin: number; // TODO: confirm with client
+  seatsMax: number; // TODO: confirm with client
+  transmissions: string[]; // TODO: confirm with client
+  fuels: string[]; // TODO: confirm with client
   highlight: string;
-  officeSlug: string;
+  imageUrl: null;
+  description: null;
+  isActive: boolean;
 };
 
-const vehiclesData: VehicleInput[] = [
-  // ── ZARAGOZA (Sede principal) ──────────────────────────────────
+const categoriesData: CategoryInput[] = [
   {
-    slug: 'seat-ibiza-eco',
-    name: 'Ibiza',
-    brand: 'Seat',
-    category: 'TURISMOS',
-    seats: 5,
-    power: '80 CV',
-    fuel: 'GASOLINA',
-    transmission: 'MANUAL',
-    dailyRate: 33,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/2018_SEAT_Ibiza_SE_Technology_MPi_1.0_Front.jpg/960px-2018_SEAT_Ibiza_SE_Technology_MPi_1.0_Front.jpg',
-    highlight: 'Económico y ciudad',
-    officeSlug: 'zaragoza',
+    slug: 'coche-gama-basica',
+    name: 'Coche Gama básica',
+    group: 'COCHE',
+    order: 1,
+    price1Day: 61,
+    price2Day: 118,
+    price3Day: 154,
+    price4Day: 180,
+    price5Day: 205,
+    price6Day: 224,
+    price7Day: 255,
+    extraKmRate: 0.15,
+    deposit: 300,
+    franchise: 300,
+    powerMin: 75, // TODO: confirm with client
+    powerMax: 110, // TODO: confirm with client
+    seatsMin: 5, // TODO: confirm with client
+    seatsMax: 5, // TODO: confirm with client
+    transmissions: ['MANUAL', 'AUTOMATICO'], // TODO: confirm with client
+    fuels: ['GASOLINA', 'DIESEL'], // TODO: confirm with client
+    highlight: 'Turismo de gama básica, ideal para ciudad y desplazamientos cortos',
+    imageUrl: null,
+    description: null,
+    isActive: true,
   },
   {
-    slug: 'seat-leon-tdi',
-    name: 'León',
-    brand: 'Seat',
-    category: 'TURISMOS',
-    seats: 5,
-    power: '115 CV',
-    fuel: 'DIESEL',
-    transmission: 'MANUAL',
-    dailyRate: 45,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/2020_SEAT_Leon_FR_TSi_Evo_1.5_Front.jpg/960px-2020_SEAT_Leon_FR_TSi_Evo_1.5_Front.jpg',
-    highlight: 'Gama Media - 5 puertas',
-    officeSlug: 'zaragoza',
+    slug: 'coche-gama-media',
+    name: 'Coche Gama media',
+    group: 'COCHE',
+    order: 2,
+    price1Day: 81,
+    price2Day: 154,
+    price3Day: 205,
+    price4Day: 241,
+    price5Day: 275,
+    price6Day: 296,
+    price7Day: 337,
+    extraKmRate: 0.20,
+    deposit: 300,
+    franchise: 300,
+    powerMin: 110, // TODO: confirm with client
+    powerMax: 150, // TODO: confirm with client
+    seatsMin: 5, // TODO: confirm with client
+    seatsMax: 5, // TODO: confirm with client
+    transmissions: ['MANUAL', 'AUTOMATICO'], // TODO: confirm with client
+    fuels: ['GASOLINA', 'DIESEL', 'HIBRIDO'], // TODO: confirm with client
+    highlight: 'Turismo de gama media, confort y eficiencia para viajes de negocios y ocio',
+    imageUrl: null,
+    description: null,
+    isActive: true,
   },
   {
-    slug: 'ford-custom-6p',
-    name: 'Custom (6 Plazas)',
-    brand: 'Ford',
-    category: 'FURGONETAS',
-    seats: 6,
-    power: '130 CV',
-    fuel: 'DIESEL',
-    transmission: 'MANUAL',
-    dailyRate: 84,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/2024_Ford_Transit_Custom_Limited_TDCi_-_1996cc_2.0_%28136PS%29_Diesel_-_Artisan_Red_-_08-2024%2C_Front.jpg/960px-2024_Ford_Transit_Custom_Limited_TDCi_-_1996cc_2.0_%28136PS%29_Diesel_-_Artisan_Red_-_08-2024%2C_Front.jpg',
-    highlight: 'Furgoneta pasajeros 6 pax',
-    officeSlug: 'zaragoza',
+    slug: 'coche-gama-alta',
+    name: 'Coche Gama alta',
+    group: 'COCHE',
+    order: 3,
+    price1Day: 102,
+    price2Day: 198,
+    price3Day: 273,
+    price4Day: 323,
+    price5Day: 374,
+    price6Day: 403,
+    price7Day: 465,
+    extraKmRate: 0.25,
+    deposit: 300,
+    franchise: 300,
+    powerMin: 150, // TODO: confirm with client
+    powerMax: 250, // TODO: confirm with client
+    seatsMin: 5, // TODO: confirm with client
+    seatsMax: 5, // TODO: confirm with client
+    transmissions: ['AUTOMATICO'], // TODO: confirm with client
+    fuels: ['GASOLINA', 'DIESEL', 'HIBRIDO', 'ELECTRICO'], // TODO: confirm with client
+    highlight: 'Turismo de gama alta, prestaciones premium y tecnología de última generación',
+    imageUrl: null,
+    description: null,
+    isActive: true,
   },
   {
-    slug: 'furgoneta-carga-3m3',
-    name: 'Berlingo / Partner',
-    brand: 'Citroën/Peugeot',
-    category: 'FURGONETAS',
-    seats: 2,
-    power: '100 CV',
-    fuel: 'DIESEL',
-    transmission: 'MANUAL',
-    dailyRate: 58,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Citro%C3%ABn_Berlingo_XL_BlueHDi_130_EAT8_Shine_XTR_%28III%29_%E2%80%93_f_02012021.jpg/960px-Citro%C3%ABn_Berlingo_XL_BlueHDi_130_EAT8_Shine_XTR_%28III%29_%E2%80%93_f_02012021.jpg',
-    highlight: 'Carga 3m³ (2 pasajeros)',
-    officeSlug: 'zaragoza',
+    slug: 'furgo-transporte-5',
+    name: 'Furgoneta transporte 5 pax',
+    group: 'FURGONETA_TRANSPORTE',
+    order: 4,
+    price1Day: 81,
+    price2Day: 157,
+    price3Day: 224,
+    price4Day: 287,
+    price5Day: 332,
+    price6Day: 394,
+    price7Day: 421,
+    extraKmRate: 0.17,
+    deposit: 300,
+    franchise: 300,
+    powerMin: 100, // TODO: confirm with client
+    powerMax: 130, // TODO: confirm with client
+    seatsMin: 5, // TODO: confirm with client
+    seatsMax: 5, // TODO: confirm with client
+    transmissions: ['MANUAL', 'AUTOMATICO'], // TODO: confirm with client
+    fuels: ['DIESEL'], // TODO: confirm with client
+    highlight: 'Furgoneta de transporte para 5 pasajeros, amplio espacio y comodidad',
+    imageUrl: null,
+    description: null,
+    isActive: true,
   },
   {
-    slug: 'furgoneta-carga-12m3',
-    name: 'Boxer / Ducato',
-    brand: 'Peugeot/Fiat',
-    category: 'FURGONETAS',
-    seats: 3,
-    power: '140 CV',
-    fuel: 'DIESEL',
-    transmission: 'MANUAL',
-    dailyRate: 91,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Fiat_e-Ducato_1X7A0350.jpg/960px-Fiat_e-Ducato_1X7A0350.jpg',
-    highlight: 'Carga Gran Volumen 12m³',
-    officeSlug: 'zaragoza',
+    slug: 'furgo-transporte-6',
+    name: 'Furgoneta transporte 6 pax',
+    group: 'FURGONETA_TRANSPORTE',
+    order: 5,
+    price1Day: 125,
+    price2Day: 227,
+    price3Day: 318,
+    price4Day: 404,
+    price5Day: 453,
+    price6Day: 510,
+    price7Day: 590,
+    extraKmRate: 0.22,
+    deposit: 300,
+    franchise: 300,
+    powerMin: 130, // TODO: confirm with client
+    powerMax: 165, // TODO: confirm with client
+    seatsMin: 6, // TODO: confirm with client
+    seatsMax: 6, // TODO: confirm with client
+    transmissions: ['MANUAL', 'AUTOMATICO'], // TODO: confirm with client
+    fuels: ['DIESEL'], // TODO: confirm with client
+    highlight: 'Furgoneta de transporte para 6 pasajeros, perfecta para grupos y traslados',
+    imageUrl: null,
+    description: null,
+    isActive: true,
   },
   {
-    slug: 'toyota-hilux-pickup',
-    name: 'Hilux Pick-Up 4x4',
-    brand: 'Toyota',
-    category: 'SUV_4X4',
-    seats: 5,
-    power: '150 CV',
-    fuel: 'DIESEL',
-    transmission: 'MANUAL',
-    dailyRate: 95,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/2016_Toyota_HiLux_Invincible_D-4D_4WD_2.4_Front.jpg/960px-2016_Toyota_HiLux_Invincible_D-4D_4WD_2.4_Front.jpg',
-    highlight: 'Pick-up trabajo / Todoterreno',
-    officeSlug: 'zaragoza',
+    slug: 'furgo-transporte-9',
+    name: 'Furgoneta transporte 9 pax',
+    group: 'FURGONETA_TRANSPORTE',
+    order: 6,
+    price1Day: 171,
+    price2Day: 295,
+    price3Day: 402,
+    price4Day: 482,
+    price5Day: 535,
+    price6Day: 602,
+    price7Day: 680,
+    extraKmRate: 0.27,
+    deposit: 600,
+    franchise: 600,
+    powerMin: 140, // TODO: confirm with client
+    powerMax: 180, // TODO: confirm with client
+    seatsMin: 9, // TODO: confirm with client
+    seatsMax: 9, // TODO: confirm with client
+    transmissions: ['MANUAL'], // TODO: confirm with client
+    fuels: ['DIESEL'], // TODO: confirm with client
+    highlight: 'Furgoneta de transporte para 9 pasajeros, ideal para excursiones y grupos grandes',
+    imageUrl: null,
+    description: null,
+    isActive: true,
   },
   {
-    slug: 'vw-passat-business',
-    name: 'Passat / Superb',
-    brand: 'Volkswagen/Skoda',
-    category: 'TURISMOS',
-    seats: 5,
-    power: '150 CV',
-    fuel: 'DIESEL',
-    transmission: 'AUTOMATICO',
-    dailyRate: 65,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/VW_Passat_Variant_Elegance_%28B9%29_%E2%80%93_f_18052025.jpg/960px-VW_Passat_Variant_Elegance_%28B9%29_%E2%80%93_f_18052025.jpg',
-    highlight: 'Gama Alta - Representación',
-    officeSlug: 'zaragoza',
-  },
-  // ── TUDELA (Enfoque en transporte y furgonetas medias) ─────────
-  {
-    slug: 'renault-clio-tudela',
-    name: 'Clio',
-    brand: 'Renault',
-    category: 'TURISMOS',
-    seats: 5,
-    power: '90 CV',
-    fuel: 'GASOLINA',
-    transmission: 'MANUAL',
-    dailyRate: 35,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Renault_Clio_%28V%2C_Facelift%29_%E2%80%93_f_02092025.jpg/960px-Renault_Clio_%28V%2C_Facelift%29_%E2%80%93_f_02092025.jpg',
-    highlight: 'Turismo compacto',
-    officeSlug: 'tudela',
+    slug: 'furgo-carga-2',
+    name: 'Furgoneta carga 2 pax',
+    group: 'FURGONETA_CARGA',
+    order: 7,
+    price1Day: 73,
+    price2Day: 143,
+    price3Day: 205,
+    price4Day: 255,
+    price5Day: 306,
+    price6Day: 362,
+    price7Day: 408,
+    extraKmRate: 0.17,
+    deposit: 300,
+    franchise: 300,
+    powerMin: 90, // TODO: confirm with client
+    powerMax: 130, // TODO: confirm with client
+    seatsMin: 2, // TODO: confirm with client
+    seatsMax: 2, // TODO: confirm with client
+    transmissions: ['MANUAL'], // TODO: confirm with client
+    fuels: ['DIESEL'], // TODO: confirm with client
+    highlight: 'Furgoneta de carga pequeña para 2 personas, ágil y económica para repartos',
+    imageUrl: null,
+    description: null,
+    isActive: true,
   },
   {
-    slug: 'furgoneta-pasajeros-9p',
-    name: 'Tourneo / Vito (9 Plazas)',
-    brand: 'Ford/Mercedes',
-    category: 'FURGONETAS',
-    seats: 9,
-    power: '130 CV',
-    fuel: 'DIESEL',
-    transmission: 'MANUAL',
-    dailyRate: 97,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Mercedes-Benz_V_250_d_Exclusive_AMG_Line_Lang_%28V_447%29_%E2%80%93_Frontansicht%2C_29._Juni_2016%2C_D%C3%BCsseldorf.jpg/960px-Mercedes-Benz_V_250_d_Exclusive_AMG_Line_Lang_%28V_447%29_%E2%80%93_Frontansicht%2C_29._Juni_2016%2C_D%C3%BCsseldorf.jpg',
-    highlight: 'Furgoneta transporte 9 pax',
-    officeSlug: 'tudela',
+    slug: 'furgo-carga-3',
+    name: 'Furgoneta carga 3 pax',
+    group: 'FURGONETA_CARGA',
+    order: 8,
+    price1Day: 113,
+    price2Day: 201,
+    price3Day: 284,
+    price4Day: 352,
+    price5Day: 402,
+    price6Day: 453,
+    price7Day: 521,
+    extraKmRate: 0.22,
+    deposit: 300,
+    franchise: 300,
+    powerMin: 100, // TODO: confirm with client
+    powerMax: 140, // TODO: confirm with client
+    seatsMin: 3, // TODO: confirm with client
+    seatsMax: 3, // TODO: confirm with client
+    transmissions: ['MANUAL'], // TODO: confirm with client
+    fuels: ['DIESEL'], // TODO: confirm with client
+    highlight: 'Furgoneta de carga mediana para 3 personas, versátil para mudanzas y transporte',
+    imageUrl: null,
+    description: null,
+    isActive: true,
   },
   {
-    slug: 'furgoneta-carga-7m3',
-    name: 'Trafic / Custom',
-    brand: 'Renault/Ford',
-    category: 'FURGONETAS',
-    seats: 3,
-    power: '120 CV',
-    fuel: 'DIESEL',
-    transmission: 'MANUAL',
-    dailyRate: 74,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/2024_Renault_Trafic_LWB_Premium_front.jpg/960px-2024_Renault_Trafic_LWB_Premium_front.jpg',
-    highlight: 'Carga media 6-8m³',
-    officeSlug: 'tudela',
+    slug: 'furgo-carga-12m3',
+    name: 'Furgoneta carga 12m3 3 pax',
+    group: 'FURGONETA_CARGA',
+    order: 9,
+    price1Day: 136,
+    price2Day: 244,
+    price3Day: 340,
+    price4Day: 426,
+    price5Day: 499,
+    price6Day: 556,
+    price7Day: 635,
+    extraKmRate: 0.25,
+    deposit: 300,
+    franchise: 300,
+    powerMin: 110, // TODO: confirm with client
+    powerMax: 150, // TODO: confirm with client
+    seatsMin: 3, // TODO: confirm with client
+    seatsMax: 3, // TODO: confirm with client
+    transmissions: ['MANUAL'], // TODO: confirm with client
+    fuels: ['DIESEL'], // TODO: confirm with client
+    highlight: 'Furgoneta de gran volumen 12m³ para 3 personas, perfecta para mudanzas completas',
+    imageUrl: null,
+    description: null,
+    isActive: true,
   },
   {
-    slug: 'autocaravana-tudela',
-    name: 'Autocaravana Perfilada',
-    brand: 'Benimar',
-    category: 'AUTOCARAVANAS',
-    seats: 4,
-    power: '140 CV',
-    fuel: 'DIESEL',
-    transmission: 'MANUAL',
-    dailyRate: 145,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/32/Hymer-Motorhome.JPG',
-    highlight: 'Renting vacacional',
-    officeSlug: 'tudela',
-  },
-  // ── SORIA (Utilitarios, 4x4 y furgoneta caja abierta) ──────────
-  {
-    slug: 'dacia-sandero-soria',
-    name: 'Sandero',
-    brand: 'Dacia',
-    category: 'TURISMOS',
-    seats: 5,
-    power: '90 CV',
-    fuel: 'GASOLINA',
-    transmission: 'MANUAL',
-    dailyRate: 33,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/2023_Dacia_Sandero_III_DSC_6012.jpg/960px-2023_Dacia_Sandero_III_DSC_6012.jpg',
-    highlight: 'Económico',
-    officeSlug: 'soria',
+    slug: 'furgo-carga-caja-abierta',
+    name: 'Furgoneta carga Caja abierta',
+    group: 'FURGONETA_CARGA',
+    order: 10,
+    price1Day: 138,
+    price2Day: 275,
+    price3Day: 413,
+    price4Day: 515,
+    price5Day: 644,
+    price6Day: 772,
+    price7Day: 855,
+    extraKmRate: 0.25,
+    deposit: 600,
+    franchise: 600,
+    powerMin: 130, // TODO: confirm with client
+    powerMax: 180, // TODO: confirm with client
+    seatsMin: 3, // TODO: confirm with client
+    seatsMax: 3, // TODO: confirm with client
+    transmissions: ['MANUAL'], // TODO: confirm with client
+    fuels: ['DIESEL'], // TODO: confirm with client
+    highlight: 'Furgoneta de caja abierta para trabajos de construcción y transporte de materiales',
+    imageUrl: null,
+    description: null,
+    isActive: true,
   },
   {
-    slug: 'suzuki-jimny-4x4',
-    name: 'Jimny / Vitara',
-    brand: 'Suzuki',
-    category: 'SUV_4X4',
-    seats: 4,
-    power: '100 CV',
-    fuel: 'GASOLINA',
-    transmission: 'MANUAL',
-    dailyRate: 70,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/2019_Suzuki_Jimny_SZ5_4X4_Automatic_1.5.jpg/960px-2019_Suzuki_Jimny_SZ5_4X4_Automatic_1.5.jpg',
-    highlight: 'Todoterreno 4x4 corto',
-    officeSlug: 'soria',
+    slug: 'todoterreno-corto',
+    name: 'Todoterreno Corto',
+    group: 'TODOTERRENO',
+    order: 11,
+    price1Day: 171,
+    price2Day: 295,
+    price3Day: 402,
+    price4Day: 482,
+    price5Day: 535,
+    price6Day: 602,
+    price7Day: 680,
+    extraKmRate: 0.27,
+    deposit: 600,
+    franchise: 600,
+    powerMin: 150, // TODO: confirm with client
+    powerMax: 200, // TODO: confirm with client
+    seatsMin: 5, // TODO: confirm with client
+    seatsMax: 7, // TODO: confirm with client
+    transmissions: ['AUTOMATICO'], // TODO: confirm with client
+    fuels: ['DIESEL', 'GASOLINA'], // TODO: confirm with client
+    highlight: 'Todoterreno compacto 4x4, ideal para rutas de montaña y terrenos difíciles',
+    imageUrl: null,
+    description: null,
+    isActive: true,
   },
   {
-    slug: 'furgoneta-caja-abierta',
-    name: 'Daily (Caja Abierta)',
-    brand: 'Iveco',
-    category: 'FURGONETAS',
-    seats: 3,
-    power: '130 CV',
-    fuel: 'DIESEL',
-    transmission: 'MANUAL',
-    dailyRate: 122,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/2014_Iveco_Daily_35_S13_MWB_2.3.jpg/960px-2014_Iveco_Daily_35_S13_MWB_2.3.jpg',
-    highlight: 'Furgoneta Caja abierta',
-    officeSlug: 'soria',
+    slug: 'todoterreno-largo',
+    name: 'Todoterreno Largo',
+    group: 'TODOTERRENO',
+    order: 12,
+    price1Day: 205,
+    price2Day: 340,
+    price3Day: 468,
+    price4Day: 590,
+    price5Day: 766,
+    price6Day: 808,
+    price7Day: 850,
+    extraKmRate: 0.27,
+    deposit: 600,
+    franchise: 600,
+    powerMin: 190, // TODO: confirm with client
+    powerMax: 250, // TODO: confirm with client
+    seatsMin: 5, // TODO: confirm with client
+    seatsMax: 7, // TODO: confirm with client
+    transmissions: ['AUTOMATICO'], // TODO: confirm with client
+    fuels: ['DIESEL', 'GASOLINA'], // TODO: confirm with client
+    highlight: 'Todoterreno de largo recorrido, máxima capacidad y confort para expediciones',
+    imageUrl: null,
+    description: null,
+    isActive: true,
   },
   {
-    slug: 'toyota-land-cruiser-largo',
-    name: 'Land Cruiser',
-    brand: 'Toyota',
-    category: 'SUV_4X4',
-    seats: 5,
-    power: '177 CV',
-    fuel: 'DIESEL',
-    transmission: 'AUTOMATICO',
-    dailyRate: 110,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/2024_Toyota_Land_Cruiser_250_VX_in_Platinum_White_Pearl_Mica%2C_front_left.jpg/960px-2024_Toyota_Land_Cruiser_250_VX_in_Platinum_White_Pearl_Mica%2C_front_left.jpg',
-    highlight: 'Todoterreno 4x4 largo',
-    officeSlug: 'soria',
+    slug: 'todoterreno-pickup',
+    name: 'Todoterreno Pick-up',
+    group: 'TODOTERRENO',
+    order: 13,
+    price1Day: 205,
+    price2Day: 340,
+    price3Day: 468,
+    price4Day: 590,
+    price5Day: 766,
+    price6Day: 808,
+    price7Day: 850,
+    extraKmRate: 0.27,
+    deposit: 600,
+    franchise: 600,
+    powerMin: 190, // TODO: confirm with client
+    powerMax: 250, // TODO: confirm with client
+    seatsMin: 2, // TODO: confirm with client
+    seatsMax: 5, // TODO: confirm with client
+    transmissions: ['MANUAL', 'AUTOMATICO'], // TODO: confirm with client
+    fuels: ['DIESEL'], // TODO: confirm with client
+    highlight: 'Pick-up todoterreno 4x4, combina capacidad de carga con tracción total para todo tipo de terreno',
+    imageUrl: null,
+    description: null,
+    isActive: true,
   },
 ];
 
@@ -327,17 +468,15 @@ async function main() {
   }
   console.log(`✅ ${officesData.length} offices seeded`);
 
-  // Upsert vehicles
-  for (const v of vehiclesData) {
-    const { officeSlug, ...vehicleFields } = v;
-    const office = await prisma.office.findUniqueOrThrow({ where: { slug: officeSlug } });
-    await prisma.vehicle.upsert({
-      where: { slug: vehicleFields.slug },
-      update: { ...vehicleFields, officeId: office.id },
-      create: { ...vehicleFields, officeId: office.id },
+  // Upsert categories
+  for (const cat of categoriesData) {
+    await prisma.category.upsert({
+      where: { slug: cat.slug },
+      update: cat,
+      create: cat,
     });
   }
-  console.log(`✅ ${vehiclesData.length} vehicles seeded`);
+  console.log(`✅ ${categoriesData.length} categories seeded`);
 
   // Upsert default admin user
   const passwordHash = await bcrypt.hash('admin123', 10);
