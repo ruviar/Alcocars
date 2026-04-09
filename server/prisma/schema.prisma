@@ -9,11 +9,11 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum VehicleCategory {
-  TURISMOS
-  FURGONETAS
-  SUV_4X4
-  AUTOCARAVANAS
+enum CategoryGroup {
+  COCHE
+  FURGONETA_TRANSPORTE
+  FURGONETA_CARGA
+  TODOTERRENO
 }
 
 enum FuelType {
@@ -61,28 +61,63 @@ model Office {
   @@map("offices")
 }
 
+model Category {
+  id            String        @id @default(cuid())
+  slug          String        @unique
+  name          String
+  group         CategoryGroup
+  description   String?
+  order         Int           @default(0)
+  price1Day     Decimal       @db.Decimal(10, 2)
+  price2Day     Decimal       @db.Decimal(10, 2)
+  price3Day     Decimal       @db.Decimal(10, 2)
+  price4Day     Decimal       @db.Decimal(10, 2)
+  price5Day     Decimal       @db.Decimal(10, 2)
+  price6Day     Decimal       @db.Decimal(10, 2)
+  price7Day     Decimal       @db.Decimal(10, 2)
+  extraKmRate   Decimal       @db.Decimal(5, 3)
+  deposit       Decimal       @db.Decimal(10, 2)
+  franchise     Decimal       @db.Decimal(10, 2)
+  powerMin      Int?
+  powerMax      Int?
+  seatsMin      Int?
+  seatsMax      Int?
+  transmissions String[]
+  fuels         String[]
+  imageUrl      String?
+  highlight     String?
+  isActive      Boolean       @default(true)
+  vehicles      Vehicle[]
+  reservations  Reservation[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([group, order])
+  @@index([isActive])
+  @@map("categories")
+}
+
 model Vehicle {
   id           String           @id @default(cuid())
   slug         String           @unique
   name         String
   brand        String
-  category     VehicleCategory
+  categoryId   String
+  category     Category         @relation(fields: [categoryId], references: [id])
   seats        Int
   power        String
   fuel         FuelType
   transmission TransmissionType
-  dailyRate    Decimal          @db.Decimal(10, 2)
   imageUrl     String
   highlight    String
   isActive     Boolean          @default(true)
   officeId     String
   office       Office           @relation(fields: [officeId], references: [id])
-  reservations Reservation[]
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
 
   @@index([officeId])
-  @@index([category])
+  @@index([categoryId])
   @@index([isActive])
   @@map("vehicles")
 }
@@ -103,8 +138,8 @@ model Client {
 model Reservation {
   id               String            @id @default(cuid())
   confirmationCode String            @unique
-  vehicleId        String
-  vehicle          Vehicle           @relation(fields: [vehicleId], references: [id])
+  categoryId       String
+  category         Category          @relation(fields: [categoryId], references: [id])
   clientId         String
   client           Client            @relation(fields: [clientId], references: [id])
   officeId         String
@@ -112,7 +147,13 @@ model Reservation {
   startDate        DateTime          @db.Date
   endDate          DateTime          @db.Date
   totalDays        Int
-  dailyRate        Decimal           @db.Decimal(10, 2)
+  estimatedKm      Int
+  includedKm       Int
+  extraKm          Int
+  baseRate         Decimal           @db.Decimal(10, 2)
+  extraKmCharge    Decimal           @db.Decimal(10, 2) @default(0)
+  depositHeld      Decimal           @db.Decimal(10, 2)
+  franchiseAmount  Decimal           @db.Decimal(10, 2)
   extrasTotal      Decimal           @db.Decimal(10, 2) @default(0)
   totalAmount      Decimal           @db.Decimal(10, 2)
   status           ReservationStatus @default(PENDING)
@@ -121,7 +162,7 @@ model Reservation {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
-  @@index([vehicleId, startDate, endDate])
+  @@index([categoryId, startDate, endDate])
   @@index([status])
   @@map("reservations")
 }
