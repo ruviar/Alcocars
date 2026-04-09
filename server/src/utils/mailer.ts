@@ -1,19 +1,85 @@
-import nodemailer from 'nodemailer';
 import { env } from '../config/env';
 
-function isSmtpConfigured(): boolean {
-  return Boolean(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS);
+const BREVO_SEND_EMAIL_URL = 'https://api.brevo.com/v3/smtp/email';
+
+type Mailbox = {
+  email: string;
+  name?: string;
+};
+
+interface SendEmailInput {
+  to: string;
+  subject: string;
+  html: string;
+  replyTo?: string;
 }
 
-const transporter = nodemailer.createTransport({
-  host: env.SMTP_HOST ?? 'smtp.gmail.com',
-  port: env.SMTP_PORT ?? 587,
-  secure: false,
-  auth: {
-    user: env.SMTP_USER ?? '',
-    pass: env.SMTP_PASS ?? '',
-  },
-});
+function isEmailApiConfigured(): boolean {
+  return Boolean(env.BREVO_API_KEY && env.SMTP_FROM);
+}
+
+function parseMailbox(raw: string): Mailbox | null {
+  const value = raw.trim();
+  if (!value) return null;
+
+  const namedAddress = value.match(/^(?<name>[^<>]+?)\s*<(?<email>[^<>@\s]+@[^<>\s]+)>$/);
+  if (namedAddress?.groups?.email) {
+    const email = namedAddress.groups.email.trim();
+    const name = namedAddress.groups.name?.trim();
+    return name ? { email, name } : { email };
+  }
+
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    return { email: value };
+  }
+
+  return null;
+}
+
+function getSender(): Mailbox | null {
+  if (!env.SMTP_FROM) return null;
+  return parseMailbox(env.SMTP_FROM);
+}
+
+async function sendEmail({ to, subject, html, replyTo }: SendEmailInput): Promise<void> {
+  if (!env.BREVO_API_KEY) {
+    throw new Error('BREVO_API_KEY is missing');
+  }
+
+  const sender = getSender();
+  if (!sender) {
+    throw new Error('SMTP_FROM must be a valid sender email');
+  }
+
+  const recipient = parseMailbox(to);
+  if (!recipient) {
+    throw new Error(`Invalid recipient email: ${to}`);
+  }
+
+  const parsedReplyTo = replyTo ? parseMailbox(replyTo) : null;
+
+  const response = await fetch(BREVO_SEND_EMAIL_URL, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      'api-key': env.BREVO_API_KEY,
+    },
+    body: JSON.stringify({
+      sender,
+      to: [recipient],
+      replyTo: parsedReplyTo ?? undefined,
+      subject,
+      htmlContent: html,
+    }),
+    signal: AbortSignal.timeout(10000),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Brevo API ${response.status}: ${body}`);
+  }
+}
 
 // ── Contact notification ─────────────────────────────────────────────────────
 
@@ -25,20 +91,17 @@ export interface ContactEmailData {
 }
 
 export function sendContactNotification(data: ContactEmailData): void {
-  if (!isSmtpConfigured()) {
-    console.log('[MAILER] SMTP not configured, skipping contact email');
+  if (!isEmailApiConfigured()) {
+    console.log('[MAILER] Brevo API not configured, skipping contact email');
     return;
   }
 
-  transporter
-    .sendMail({
-      from: env.SMTP_FROM,
-      to: env.NOTIFY_EMAIL,
-      replyTo: data.email,
-      subject: `[Alcocars] Nuevo mensaje de ${data.nombre}`,
-      html: contactHtml(data),
-    })
-    .catch((err) => console.error('[MAILER] contact error:', err));
+  void sendEmail({
+    to: env.NOTIFY_EMAIL,
+    replyTo: data.email,
+    subject: `[Alcocars] Nuevo mensaje de ${data.nombre}`,
+    html: contactHtml(data),
+  }).catch((err) => console.error('[MAILER] contact error:', err));
 }
 
 // ── Booking notification ─────────────────────────────────────────────────────
@@ -60,30 +123,24 @@ export interface BookingEmailData {
 }
 
 export function sendBookingEmails(data: BookingEmailData): void {
-  if (!isSmtpConfigured()) {
-    console.log('[MAILER] SMTP not configured, skipping booking emails');
+  if (!isEmailApiConfigured()) {
+    console.log('[MAILER] Brevo API not configured, skipping booking emails');
     return;
   }
 
   // Admin notification
-  transporter
-    .sendMail({
-      from: env.SMTP_FROM,
-      to: env.NOTIFY_EMAIL,
-      subject: `[Alcocars] Nueva solicitud #${data.confirmationCode}`,
-      html: adminBookingHtml(data),
-    })
-    .catch((err) => console.error('[MAILER] admin booking error:', err));
+  void sendEmail({
+    to: env.NOTIFY_EMAIL,
+    subject: `[Alcocars] Nueva solicitud #${data.confirmationCode}`,
+    html: adminBookingHtml(data),
+  }).catch((err) => console.error('[MAILER] admin booking error:', err));
 
   // Customer receipt
-  transporter
-    .sendMail({
-      from: env.SMTP_FROM,
-      to: data.client.email,
-      subject: `Solicitud recibida · Alcocars · #${data.confirmationCode}`,
-      html: customerReceiptHtml(data),
-    })
-    .catch((err) => console.error('[MAILER] customer receipt error:', err));
+  void sendEmail({
+    to: data.client.email,
+    subject: `Solicitud recibida · Alcocars · #${data.confirmationCode}`,
+    html: customerReceiptHtml(data),
+  }).catch((err) => console.error('[MAILER] customer receipt error:', err));
 }
 
 // ── HTML templates ───────────────────────────────────────────────────────────
