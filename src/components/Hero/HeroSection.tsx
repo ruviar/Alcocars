@@ -1,10 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import BookingEngine from './BookingEngine';
 import styles from './HeroSection.module.css';
-
-gsap.registerPlugin(ScrollTrigger);
 
 export default function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -33,18 +30,6 @@ export default function HeroSection() {
         .fromTo(engineRef.current,
           { opacity: 0, y: 40 },
           { opacity: 1, y: 0, duration: 0.9 }, '-=0.4');
-
-      // Parallax on scroll
-      gsap.to(bgRef.current, {
-        yPercent: 25,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top top',
-          end: 'bottom top',
-          scrub: 1.5,
-        }
-      });
     }, sectionRef);
 
     return () => ctx.revert();
