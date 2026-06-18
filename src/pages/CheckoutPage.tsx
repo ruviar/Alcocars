@@ -281,6 +281,10 @@ export default function CheckoutPage() {
   const [returnLocation, setReturnLocation] = useState<string>(bookingState?.location ?? 'Zaragoza');
   const [plannedKmInput, setPlannedKmInput] = useState('200');
   const [selectedTariffId, setSelectedTariffId] = useState<string>(() => resolveInitialTariffId(bookingState));
+  const [activeVehicleCategory, setActiveVehicleCategory] = useState<SuperCategory>(
+    () => tariffs.find((tariff) => tariff.id === resolveInitialTariffId(bookingState))?.superCategory
+      ?? SUPER_CATEGORIES[0],
+  );
   const [selectedExtras, setSelectedExtras] = useState<Record<ExtraId, boolean>>(() => buildInitialExtrasState());
   const [personalData, setPersonalData] = useState<PersonalData>({
     nombre: '',
@@ -812,54 +816,66 @@ export default function CheckoutPage() {
 
               {currentStep === 2 && (
                 <div className={styles.vehicleGroups}>
-                  {SUPER_CATEGORIES.map((category) => {
-                    const categoryTariffs = tariffs.filter((tariff) => tariff.superCategory === category);
+                  <div className={styles.categoryTabs} role="tablist" aria-label="Categorias de vehiculo">
+                    {SUPER_CATEGORIES.map((category) => {
+                      const count = tariffs.filter((tariff) => tariff.superCategory === category).length;
 
-                    return (
-                      <section key={category} className={styles.vehicleGroup}>
-                        <h3 className={styles.vehicleGroupTitle}>{category}</h3>
+                      return (
+                        <button
+                          key={category}
+                          type="button"
+                          role="tab"
+                          aria-selected={activeVehicleCategory === category}
+                          className={`${styles.categoryTab} ${activeVehicleCategory === category ? styles.categoryTabActive : ''}`}
+                          onClick={() => setActiveVehicleCategory(category)}
+                        >
+                          {category}
+                          <span className={styles.categoryTabCount}>{count}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
 
-                        <div className={styles.vehicleList}>
-                          {categoryTariffs.map((tariff) => {
-                            const isSelected = selectedTariffId === tariff.id;
+                  <div className={styles.vehicleList}>
+                    {tariffs
+                      .filter((tariff) => tariff.superCategory === activeVehicleCategory)
+                      .map((tariff) => {
+                        const isSelected = selectedTariffId === tariff.id;
 
-                            return (
-                              <label
-                                key={tariff.id}
-                                className={`${styles.vehicleCard} ${isSelected ? styles.vehicleCardSelected : ''}`}
-                              >
-                                <div className={styles.vehicleHeader}>
-                                  <input
-                                    className={styles.vehicleRadio}
-                                    type="radio"
-                                    name="vehicle-tariff"
-                                    value={tariff.id}
-                                    checked={isSelected}
-                                    onChange={() => {
-                                      setSelectedTariffId(tariff.id);
-                                      setStepError(null);
-                                    }}
-                                  />
-                                  <div>
-                                    <p className={styles.vehicleTitle}>{tariff.name}</p>
-                                    <p className={styles.vehicleMeta}>
-                                      {tariff.kmPerDay} km/dia incluidos · {tariff.kmExtra.toFixed(2).replace('.', ',')} €/km extra
-                                    </p>
-                                  </div>
-                                </div>
-
-                                <p className={styles.vehiclePrice}>
-                                  {tariff.consultOnly
-                                    ? 'Tarifa base bajo consulta'
-                                    : `${formatCurrency(tariff.rates[0] ?? 0)} / dia`}
+                        return (
+                          <label
+                            key={tariff.id}
+                            className={`${styles.vehicleCard} ${isSelected ? styles.vehicleCardSelected : ''}`}
+                          >
+                            <div className={styles.vehicleHeader}>
+                              <input
+                                className={styles.vehicleRadio}
+                                type="radio"
+                                name="vehicle-tariff"
+                                value={tariff.id}
+                                checked={isSelected}
+                                onChange={() => {
+                                  setSelectedTariffId(tariff.id);
+                                  setStepError(null);
+                                }}
+                              />
+                              <div>
+                                <p className={styles.vehicleTitle}>{tariff.name}</p>
+                                <p className={styles.vehicleMeta}>
+                                  {tariff.kmPerDay} km/dia incluidos · {tariff.kmExtra.toFixed(2).replace('.', ',')} €/km extra
                                 </p>
-                              </label>
-                            );
-                          })}
-                        </div>
-                      </section>
-                    );
-                  })}
+                              </div>
+                            </div>
+
+                            <p className={styles.vehiclePrice}>
+                              {tariff.consultOnly
+                                ? 'Tarifa base bajo consulta'
+                                : `${formatCurrency(tariff.rates[0] ?? 0)} / dia`}
+                            </p>
+                          </label>
+                        );
+                      })}
+                  </div>
                 </div>
               )}
 
