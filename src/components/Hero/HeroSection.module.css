@@ -18,12 +18,18 @@
   width: 100%;
   height: 120%;
   object-fit: cover;
-  object-position: center 40%;
+  object-position: center 68%;
   transform-origin: center;
 }
 .bgOverlay {
   position: absolute;
   inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(1, 8, 25, 0.78) 0%,
+    rgba(1, 8, 25, 0.55) 45%,
+    rgba(1, 8, 25, 0.72) 100%
+  );
 }
 
 /* Grid lines decoration */
