@@ -55,7 +55,7 @@ export default function HeroSection() {
       {/* Background */}
       <div ref={bgRef} className={styles.bg}>
         <img
-          src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1600&q=85"
+          src="/images/fondo2.png"
           alt="Premium vehicle fleet"
           className={styles.bgImg}
         />
