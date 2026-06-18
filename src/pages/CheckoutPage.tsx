@@ -5,6 +5,7 @@ import { es } from 'date-fns/locale';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { SUPER_CATEGORIES, tariffs, type SuperCategory, type TariffEntry } from '../data/tariffs';
 import { api } from '../lib/api';
+import PhoneInput from '../components/PhoneInput/PhoneInput';
 import styles from './CheckoutPage.module.css';
 
 type CheckoutState = {
@@ -521,6 +522,18 @@ export default function CheckoutPage() {
     }
   };
 
+  const handlePhoneChange = (value: string) => {
+    setPersonalData((prev) => ({ ...prev, telefono: value }));
+
+    if (stepError) {
+      setStepError(null);
+    }
+
+    if (submitError) {
+      setSubmitError(null);
+    }
+  };
+
   const goToStep = (step: StepNumber) => {
     if (step <= currentStep) {
       setCurrentStep(step);
@@ -685,7 +698,7 @@ export default function CheckoutPage() {
                         mode="range"
                         locale={es}
                         weekStartsOn={1}
-                        numberOfMonths={1}
+                        numberOfMonths={2}
                         pagedNavigation
                         fixedWeeks
                         showOutsideDays
@@ -962,13 +975,10 @@ export default function CheckoutPage() {
 
                       <label className={styles.field}>
                         <span className={styles.fieldLabel}>Telefono</span>
-                        <input
-                          className={styles.inputControl}
-                          type="tel"
-                          name="telefono"
+                        <PhoneInput
                           value={personalData.telefono}
-                          onChange={handlePersonalDataChange}
-                          placeholder="+34 600 000 000"
+                          onChange={handlePhoneChange}
+                          name="telefono"
                           required
                         />
                       </label>

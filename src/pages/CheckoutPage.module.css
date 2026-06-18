@@ -162,7 +162,7 @@
 
 .calendarWrapper {
   width: 100%;
-  max-width: 360px;
+  max-width: 660px;
   border: none;
   border-radius: 0;
   background: transparent;
@@ -664,6 +664,7 @@
 .rdpMonths {
   display: flex;
   gap: 10px;
+  position: relative;
 }
 
 .rdpMonth {
@@ -688,7 +689,10 @@
 
 .rdpNav {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -837,6 +841,11 @@
 
   .calendarWrapper {
     max-width: 100%;
+  }
+
+  .rdpMonths {
+    flex-direction: column;
+    gap: 12px;
   }
 
   .rdpMonth {

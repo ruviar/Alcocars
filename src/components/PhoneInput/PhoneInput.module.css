@@ -1,0 +1,176 @@
+.root {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  width: 100%;
+  font: inherit;
+  color: var(--chalk);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.root[data-variant='boxed'] {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  min-height: 48px;
+  padding: 0 12px;
+}
+
+.root[data-variant='boxed']:focus-within {
+  border-color: rgba(0, 45, 114, 0.64);
+}
+
+.root[data-variant='underline'] {
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  padding: 10px 0;
+}
+
+.root[data-variant='underline']:focus-within {
+  border-bottom-color: var(--accent);
+  box-shadow: 0 1px 0 0 var(--accent);
+}
+
+.countryButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+}
+
+.flag {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.dialCode {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.chevron {
+  width: 12px;
+  height: 12px;
+  opacity: 0.6;
+  transition: transform var(--transition-fast);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.divider {
+  width: 1px;
+  height: 60%;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.numberField {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  padding: 0;
+}
+
+.numberField::placeholder {
+  color: rgba(94, 104, 121, 0.55);
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: min(280px, 90vw);
+  max-height: 280px;
+  background: var(--white);
+  border: 1px solid rgba(1, 35, 105, 0.16);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(1, 35, 105, 0.18);
+  padding: 8px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.search {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: var(--font-body);
+  color: var(--chalk);
+}
+
+.search:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  max-height: 220px;
+  display: flex;
+  flex-direction: column;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--chalk);
+}
+
+.option:hover,
+.optionActive {
+  background: rgba(175, 226, 58, 0.24);
+}
+
+.countryName {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.optionDialCode {
+  color: var(--silver);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.empty {
+  padding: 12px 8px;
+  font-size: 13px;
+  color: var(--silver);
+  text-align: center;
+}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'r
 import { gsap } from 'gsap';
 import { offices } from '../data/offices';
 import { api } from '../lib/api';
+import PhoneInput from '../components/PhoneInput/PhoneInput';
 import styles from './ContactPage.module.css';
 
 type ContactFormData = {
@@ -69,6 +70,14 @@ export default function ContactPage() {
       ...prev,
       [name]: value,
     }));
+
+    if (isSubmitted) {
+      setIsSubmitted(false);
+    }
+  };
+
+  const handlePhoneChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, telefono: value }));
 
     if (isSubmitted) {
       setIsSubmitted(false);
@@ -152,12 +161,11 @@ export default function ContactPage() {
 
             <label className={styles.field}>
               <span>Teléfono</span>
-              <input
-                type="tel"
-                name="telefono"
+              <PhoneInput
                 value={formData.telefono}
-                onChange={handleChange}
-                placeholder="+34 600 000 000"
+                onChange={handlePhoneChange}
+                name="telefono"
+                variant="underline"
                 required
               />
             </label>
