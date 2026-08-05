@@ -12,7 +12,13 @@ export async function contactRouter(app: FastifyInstance) {
       });
     }
 
-    await processContactForm(parsed.data);
-    return reply.send({ ok: true });
+    const result = await processContactForm(parsed.data);
+
+    if (result.status === 'FAILED') {
+      request.log.error({ error: result.error }, 'No se pudo enviar el aviso de contacto');
+      return reply.status(502).send({ error: 'EMAIL_DELIVERY_FAILED' });
+    }
+
+    return reply.send({ ok: true, delivered: result.status === 'SENT' });
   });
 }

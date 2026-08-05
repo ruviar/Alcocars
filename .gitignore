@@ -30,3 +30,8 @@ server/.local-postgres/
 
 # Claude internal ephemeral worktrees
 .claude/worktrees/
+
+# Secretos del backend: nunca en el repositorio
+server/.env
+# Vistas previas de emails generadas en local
+server/.mail-preview/

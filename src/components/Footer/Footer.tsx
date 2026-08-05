@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { offices } from '../../data/offices';
+import { offices, officeLabel } from '../../data/offices';
 import styles from './Footer.module.css';
 
 const quickLinks = [
@@ -24,9 +24,7 @@ const legalLinks = [
   { label: 'Política de Cookies', to: '/legal/politica-cookies' },
 ];
 
-const localOffices = offices.filter(office =>
-  ['Zaragoza', 'Tudela', 'Soria'].includes(office.city),
-);
+const localOffices = offices;
 
 function PhoneIcon() {
   return (
@@ -88,7 +86,7 @@ export default function Footer() {
             <ul className={styles.contactList}>
               {localOffices.map(office => (
                 <li key={office.id} className={styles.officeItem}>
-                  <strong>{office.city}</strong>
+                  <strong>{officeLabel(office)}</strong>
                   <a
                     className={styles.phoneLink}
                     href={`tel:${office.phone.replace(/\s+/g, '')}`}

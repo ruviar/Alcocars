@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { PrismaClient, VehicleCategory, FuelType, TransmissionType } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import { OFFICES } from '../src/config/company';
 
 const databaseUrl = process.env.DATABASE_URL?.trim();
 
@@ -41,41 +42,20 @@ function printSeedHelp(error: unknown): void {
 
 const prisma = new PrismaClient();
 
-const officesData = [
-  {
-    slug: 'zaragoza',
-    city: 'Zaragoza',
-    address: 'Av. de Goya, 12, 50006 Zaragoza',
-    phone: '+34 976 123 456',
-    email: 'zaragoza@alocars.es',
-    hours: 'Lun–Vie 08:00–20:00 · Sáb 09:00–14:00',
-    lat: 41.6488,
-    lng: -0.8891,
-    description: 'Sede central. Acceso rápido al aeropuerto de Zaragoza y conexión directa con la A-2.',
-  },
-  {
-    slug: 'tudela',
-    city: 'Tudela',
-    address: 'Calle Gayarre, 4, 31500 Tudela (Navarra)',
-    phone: '+34 948 234 567',
-    email: 'tudela@alocars.es',
-    hours: 'Lun–Vie 08:30–19:00 · Sáb 09:00–13:00',
-    lat: 42.0606,
-    lng: -1.6054,
-    description: 'Puerta de entrada a la Ribera Navarra. Perfecta para explorar la región a tu ritmo.',
-  },
-  {
-    slug: 'soria',
-    city: 'Soria',
-    address: 'Alcotrans | Transporte de áridos, N-122, 105, 42100 Ágreda, Soria',
-    phone: '+34 975 345 678',
-    email: 'soria@alocars.es',
-    hours: 'Lun–Vie 09:00–18:30',
-    lat: 41.7672,
-    lng: -2.4799,
-    description: 'En el corazón de Castilla. Base ideal para la Sierra de Urbión y las tierras de Machado.',
-  },
-];
+// Las oficinas salen de la única fuente de verdad con los datos reales de la
+// empresa (`src/config/company.ts`), para que base de datos, emails y web no
+// puedan divergir.
+const officesData = OFFICES.map((office) => ({
+  slug: office.slug,
+  city: office.city,
+  address: office.address,
+  phone: office.phone,
+  email: office.email,
+  hours: office.hours,
+  lat: office.coords[0],
+  lng: office.coords[1],
+  description: office.description,
+}));
 
 type VehicleInput = {
   slug: string;
@@ -262,7 +242,7 @@ const vehiclesData: VehicleInput[] = [
     dailyRate: 33,
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/2023_Dacia_Sandero_III_DSC_6012.jpg/960px-2023_Dacia_Sandero_III_DSC_6012.jpg',
     highlight: 'Económico',
-    officeSlug: 'soria',
+    officeSlug: 'agreda',
   },
   {
     slug: 'suzuki-jimny-4x4',
@@ -276,7 +256,7 @@ const vehiclesData: VehicleInput[] = [
     dailyRate: 70,
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/2019_Suzuki_Jimny_SZ5_4X4_Automatic_1.5.jpg/960px-2019_Suzuki_Jimny_SZ5_4X4_Automatic_1.5.jpg',
     highlight: 'Todoterreno 4x4 corto',
-    officeSlug: 'soria',
+    officeSlug: 'agreda',
   },
   {
     slug: 'furgoneta-caja-abierta',
@@ -290,7 +270,7 @@ const vehiclesData: VehicleInput[] = [
     dailyRate: 122,
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/2014_Iveco_Daily_35_S13_MWB_2.3.jpg/960px-2014_Iveco_Daily_35_S13_MWB_2.3.jpg',
     highlight: 'Furgoneta Caja abierta',
-    officeSlug: 'soria',
+    officeSlug: 'agreda',
   },
   {
     slug: 'toyota-land-cruiser-largo',
@@ -304,7 +284,7 @@ const vehiclesData: VehicleInput[] = [
     dailyRate: 110,
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/2024_Toyota_Land_Cruiser_250_VX_in_Platinum_White_Pearl_Mica%2C_front_left.jpg/960px-2024_Toyota_Land_Cruiser_250_VX_in_Platinum_White_Pearl_Mica%2C_front_left.jpg',
     highlight: 'Todoterreno 4x4 largo',
-    officeSlug: 'soria',
+    officeSlug: 'agreda',
   },
 ];
 

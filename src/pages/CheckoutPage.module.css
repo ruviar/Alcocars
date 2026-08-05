@@ -912,3 +912,138 @@
     flex-direction: column;
   }
 }
+
+/* ── Extras: cantidades y bloqueados ─────────────────────────── */
+.extraItemLocked {
+  opacity: 0.92;
+  background: rgba(151, 215, 0, 0.06);
+  cursor: default;
+}
+
+.extraAutoNote {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: rgba(1, 35, 105, 0.55);
+  font-weight: 400;
+}
+
+.extraControls {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  justify-self: end;
+  white-space: nowrap;
+}
+
+.qtyStepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px;
+  background: #fff;
+}
+
+.qtyBtn {
+  width: 26px;
+  height: 26px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--pantone-280);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.qtyBtn:hover:not(:disabled) {
+  background: rgba(151, 215, 0, 0.18);
+}
+
+.qtyBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.qtyValue {
+  min-width: 22px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--pantone-280);
+}
+
+/* ── Consentimiento RGPD ─────────────────────────────────────── */
+.consentRow {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(1, 35, 105, 0.78);
+  cursor: pointer;
+}
+
+.consentRow a {
+  color: var(--pantone-280);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* ── Pantalla de éxito: código y avisos ──────────────────────── */
+.successCode {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+  padding: 18px 22px;
+  border: 1px solid rgba(151, 215, 0, 0.65);
+  border-radius: 14px;
+  background: rgba(151, 215, 0, 0.10);
+}
+
+.successCodeLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: rgba(1, 35, 105, 0.6);
+}
+
+.successCodeValue {
+  font-family: var(--font-mono);
+  font-size: clamp(24px, 4vw, 32px);
+  letter-spacing: 3px;
+  color: var(--pantone-280);
+}
+
+.successCodeHint {
+  font-size: 12px;
+  color: rgba(1, 35, 105, 0.55);
+}
+
+.successWarning {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid #f0c24b;
+  border-left: 4px solid #f0c24b;
+  border-radius: 10px;
+  background: #fff8e6;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #6b4e06;
+}
+
+.successWarning a {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+}

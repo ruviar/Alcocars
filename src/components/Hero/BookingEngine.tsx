@@ -3,9 +3,11 @@ import { DayPicker, type ClassNames, type DateRange } from 'react-day-picker';
 import { addDays, format, startOfToday } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
+import { officeLabel, offices } from '../../data/offices';
 import styles from './BookingEngine.module.css';
 
-const locations = ['Zaragoza', 'Tudela', 'Soria'];
+const locations = offices.map((office) => office.city);
+const locationLabels = new Map(offices.map((office) => [office.city, officeLabel(office)]));
 const rentalCategories = ['Cualquier gama', 'Turismos', 'Furgonetas', '4×4', 'Autocaravanas'];
 
 type SelectDropdown = 'location' | 'category' | null;
@@ -141,7 +143,7 @@ export default function BookingEngine() {
               aria-label="Seleccionar ciudad de recogida"
               onClick={() => toggleSelectDropdown('location')}
             >
-              <span>{location}</span>
+              <span>{locationLabels.get(location) ?? location}</span>
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -170,7 +172,7 @@ export default function BookingEngine() {
                         setOpenDropdown(null);
                       }}
                     >
-                      {city}
+                      {locationLabels.get(city) ?? city}
                     </button>
                   </li>
                 ))}

@@ -1,18 +1,17 @@
-import { sendContactNotification } from '../../utils/mailer';
+import { sendContactNotification, type SendEmailResult } from '../../utils/mailer';
 import type { ContactBody } from './contact.schema';
 
-export async function processContactForm(data: ContactBody): Promise<void> {
-  console.log('[CONTACT FORM]', {
-    from: data.email,
-    name: data.nombre,
-    phone: data.telefono,
-    receivedAt: new Date().toISOString(),
-  });
+/**
+ * Procesa el formulario de contacto. Devuelve el resultado del envío para que
+ * el endpoint pueda avisar al usuario si el aviso no llegó, en lugar de
+ * mostrarle un «mensaje enviado» que no es cierto.
+ */
+export async function processContactForm(data: ContactBody): Promise<SendEmailResult> {
+  const result = await sendContactNotification(data);
 
-  sendContactNotification({
-    nombre: data.nombre,
-    email: data.email,
-    telefono: data.telefono,
-    mensaje: data.mensaje,
-  });
+  if (result.status !== 'SENT') {
+    console.error('[CONTACT] el aviso por email no se entregó:', result.error);
+  }
+
+  return result;
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { gsap } from 'gsap';
-import { offices } from '../data/offices';
+import { offices, officeLabel } from '../data/offices';
 import { api } from '../lib/api';
 import PhoneInput from '../components/PhoneInput/PhoneInput';
 import styles from './ContactPage.module.css';
@@ -19,14 +19,12 @@ const initialFormData: ContactFormData = {
   mensaje: '',
 };
 
-const localOffices = offices.filter(office =>
-  ['Zaragoza', 'Tudela', 'Soria'].includes(office.city),
-);
+const localOffices = offices;
 
 const whatsappDisplayNumber = '+34 608 808 240';
 const whatsappLinkNumber = '34608808240';
 const whatsappPrefilledMessage =
-  'Hola, me interesa recibir informacion sobre alquiler y renting.';
+  'Hola, me interesa recibir información sobre alquiler y renting.';
 
 export default function ContactPage() {
   const pageRef = useRef<HTMLElement>(null);
@@ -113,7 +111,7 @@ export default function ContactPage() {
           <div className={styles.officeList}>
             {localOffices.map((office) => (
               <article key={office.id} className={styles.officeCard}>
-                <h2>{office.city}</h2>
+                <h2>{officeLabel(office)}</h2>
                 <a href={`tel:${office.phone.replace(/\s+/g, '')}`}>{office.phone}</a>
               </article>
             ))}
@@ -130,7 +128,7 @@ export default function ContactPage() {
             <strong className={styles.whatsappNumber}>{whatsappDisplayNumber}</strong>
           </a>
 
-          <p className={styles.chatHint}>Atencion directa para reservas y dudas comerciales.</p>
+          <p className={styles.chatHint}>Atención directa para reservas y dudas comerciales.</p>
         </section>
 
         <section ref={formColumnRef} className={styles.formColumn} aria-label="Formulario de contacto">

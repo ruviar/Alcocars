@@ -2,6 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import { env } from './config/env';
+import { catalogRouter } from './modules/catalog/catalog.router';
 import { officesRouter } from './modules/offices/offices.router';
 import { vehiclesRouter } from './modules/vehicles/vehicles.router';
 import { reservationsRouter } from './modules/reservations/reservations.router';
@@ -38,6 +39,7 @@ export async function buildApp() {
   }));
 
   // Public API routes
+  await app.register(catalogRouter, { prefix: '/api' });
   await app.register(officesRouter, { prefix: '/api' });
   await app.register(vehiclesRouter, { prefix: '/api' });
   await app.register(reservationsRouter, { prefix: '/api' });

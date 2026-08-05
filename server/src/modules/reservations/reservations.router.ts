@@ -1,10 +1,28 @@
 import type { FastifyInstance } from 'fastify';
 import { categoryAvailabilityQuerySchema, checkoutBodySchema } from './reservations.schema';
-import { getAvailableCategoryOffers, getReservationById, processCheckout } from './reservations.service';
+import {
+  ReservationError,
+  createBookingRequest,
+  getAvailableTariffOffers,
+  getReservationByCode,
+  getReservationById,
+} from './reservations.service';
+
+/** Códigos de negocio → HTTP. Cualquier otro error sube a Fastify como 500. */
+const STATUS_BY_ERROR: Record<string, number> = {
+  INVALID_DATE_RANGE: 422,
+  MIN_RENTAL_DURATION: 422,
+  MAX_RENTAL_DAYS_EXCEEDED: 422,
+  INVALID_EXTRA_QUANTITY: 422,
+  EXTRA_NOT_FOUND: 422,
+  TARIFF_NOT_FOUND: 404,
+  OFFICE_NOT_FOUND: 404,
+  RETURN_OFFICE_NOT_FOUND: 404,
+};
 
 export async function reservationsRouter(app: FastifyInstance) {
-  // GET /api/reservations/categories?officeSlug=zaragoza&startDate=2026-04-01&endDate=2026-04-05
-  app.get('/reservations/categories', async (request, reply) => {
+  // GET /api/reservations/offers?officeSlug=zaragoza&startDate=…&endDate=…
+  const offersHandler = async (request: any, reply: any) => {
     const parsed = categoryAvailabilityQuerySchema.safeParse(request.query);
     if (!parsed.success) {
       return reply.status(422).send({
@@ -13,31 +31,21 @@ export async function reservationsRouter(app: FastifyInstance) {
       });
     }
 
-    const { officeSlug, startDate, endDate } = parsed.data;
-
     try {
-      const categories = await getAvailableCategoryOffers({
-        officeSlug,
-        startDate: new Date(startDate),
-        endDate: new Date(endDate),
-      });
-
-      return reply.send(categories);
-    } catch (err: any) {
-      if (err.message === 'INVALID_DATE_RANGE') {
-        return reply.status(422).send({ error: 'INVALID_DATE_RANGE' });
-      }
-      if (err.message === 'MAX_RENTAL_DAYS_EXCEEDED') {
-        return reply.status(422).send({ error: 'MAX_RENTAL_DAYS_EXCEEDED' });
-      }
-      if (err.message === 'OFFICE_NOT_FOUND') {
-        return reply.status(404).send({ error: 'OFFICE_NOT_FOUND' });
+      return reply.send(await getAvailableTariffOffers(parsed.data));
+    } catch (err) {
+      if (err instanceof ReservationError) {
+        return reply.status(STATUS_BY_ERROR[err.message] ?? 422).send({ error: err.message });
       }
       throw err;
     }
-  });
+  };
 
-  // POST /api/reservations/checkout
+  app.get('/reservations/offers', offersHandler);
+  // Alias del nombre anterior para no romper integraciones existentes.
+  app.get('/reservations/categories', offersHandler);
+
+  // POST /api/reservations/checkout — registra la solicitud y avisa por email
   app.post('/reservations/checkout', async (request, reply) => {
     const parsed = checkoutBodySchema.safeParse(request.body);
     if (!parsed.success) {
@@ -47,42 +55,51 @@ export async function reservationsRouter(app: FastifyInstance) {
       });
     }
 
-    const { startDate, endDate, extras, ...rest } = parsed.data;
-
     try {
-      const result = await processCheckout({
-        ...rest,
-        startDate: new Date(startDate),
-        endDate: new Date(endDate),
-        extras,
+      const result = await createBookingRequest(parsed.data);
+
+      // La solicitud queda guardada aunque el aviso por email falle: se informa
+      // para que el frontend pueda pedirle al cliente que llame por teléfono.
+      const emailDelivered = result.email.admin.status === 'SENT';
+      if (!emailDelivered) {
+        request.log.error(
+          { reservationId: result.reservationId, email: result.email },
+          'La solicitud se guardó pero el aviso por email no se entregó',
+        );
+      }
+
+      return reply.status(201).send({
+        reservationId: result.reservationId,
+        confirmationCode: result.confirmationCode,
+        needsAvailabilityCheck: result.needsAvailabilityCheck,
+        pickupAt: result.pickupAt.toISOString(),
+        returnAt: result.returnAt.toISOString(),
+        quote: result.quote,
+        notification: {
+          delivered: emailDelivered,
+          admin: result.email.admin.status,
+          customer: result.email.customer.status,
+        },
       });
-      return reply.status(201).send(result);
-    } catch (err: any) {
-      if (err.message === 'INVALID_DATE_RANGE') {
-        return reply.status(422).send({ error: 'INVALID_DATE_RANGE' });
+    } catch (err) {
+      if (err instanceof ReservationError) {
+        return reply.status(STATUS_BY_ERROR[err.message] ?? 422).send({ error: err.message });
       }
-      if (err.message === 'INVALID_BABY_SEAT_QUANTITY') {
-        return reply.status(422).send({ error: 'INVALID_BABY_SEAT_QUANTITY' });
-      }
-      if (err.message === 'MAX_RENTAL_DAYS_EXCEEDED') {
-        return reply.status(422).send({ error: 'MAX_RENTAL_DAYS_EXCEEDED' });
-      }
-      if (err.message === 'CATEGORY_NOT_AVAILABLE') {
-        return reply.status(409).send({ error: 'CATEGORY_NOT_AVAILABLE' });
-      }
-      if (err.message === 'OFFICE_NOT_FOUND') {
-        return reply.status(404).send({ error: 'OFFICE_NOT_FOUND' });
-      }
-      throw err; // unexpected — let Fastify handle as 500
+      throw err;
     }
+  });
+
+  // GET /api/reservations/code/:code — consulta pública por código
+  app.get<{ Params: { code: string } }>('/reservations/code/:code', async (request, reply) => {
+    const reservation = await getReservationByCode(request.params.code.trim().toUpperCase());
+    if (!reservation) return reply.status(404).send({ error: 'RESERVATION_NOT_FOUND' });
+    return reply.send(reservation);
   });
 
   // GET /api/reservations/:id
   app.get<{ Params: { id: string } }>('/reservations/:id', async (request, reply) => {
     const reservation = await getReservationById(request.params.id);
-    if (!reservation) {
-      return reply.status(404).send({ error: 'RESERVATION_NOT_FOUND' });
-    }
+    if (!reservation) return reply.status(404).send({ error: 'RESERVATION_NOT_FOUND' });
     return reply.send(reservation);
   });
 }
