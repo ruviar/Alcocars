@@ -6,12 +6,11 @@ export default function NotFoundPage() {
 
   return (
     <main className={styles.page}>
-      <section className={styles.panel} aria-label="Pagina no encontrada">
+      <section className={styles.panel} aria-label="Página no encontrada">
         <p className={styles.code}>404</p>
         <h1 className={styles.title}>Ruta fuera del mapa</h1>
         <p className={styles.text}>
-          La direccion que buscas no existe o se ha movido. Nuestro coche de referencia ya va en otra direccion,
-          pero puedes volver al inicio en un clic.
+          La dirección que buscas no existe o se ha movido. Puedes volver al inicio o ir directamente a la flota y las tarifas.
         </p>
         <button type="button" className={styles.button} onClick={() => navigate('/')}>
           Volver al inicio

@@ -1,24 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { gsap } from 'gsap';
 import styles from './SmartHeader.module.css';
 
 const navLinks = [
   { label: 'Inicio', href: '/' },
   { label: 'Flota', href: '/flota' },
+  { label: 'Tarifas', href: '/tarifas' },
   { label: 'Servicios', href: '/servicios' },
-  { label: 'Blog', href: '/blog' },
   { label: 'Sedes', href: '/sedes' },
   { label: 'Empresa', href: '/empresa' },
+  { label: 'FAQs', href: '/faqs' },
   { label: 'Contacto', href: '/contacto' },
 ];
 
 export default function SmartHeader() {
   const headerRef = useRef<HTMLElement>(null);
-  const pendingScrollTimeoutRef = useRef<number | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const lastScrollY = useRef(0);
-  const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
@@ -80,93 +79,62 @@ export default function SmartHeader() {
   }, []);
 
   useEffect(() => {
+    // Cerrar el menú móvil al navegar es una sincronización con la URL:
+    // el "cascading render" que señala la regla es exactamente lo que queremos.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileOpen(false);
   }, [location.pathname]);
 
-  useEffect(() => {
-    return () => {
-      if (pendingScrollTimeoutRef.current !== null) {
-        window.clearTimeout(pendingScrollTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  const performScroll = (href: string) => {
-    const el = document.querySelector(href);
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const scrollTo = (href: string) => {
-    setMobileOpen(false);
-
-    if (pendingScrollTimeoutRef.current !== null) {
-      window.clearTimeout(pendingScrollTimeoutRef.current);
-      pendingScrollTimeoutRef.current = null;
-    }
-
-    if (href.startsWith('#')) {
-      if (location.pathname === '/') {
-        performScroll(href);
-        return;
-      }
-
-      navigate('/');
-      pendingScrollTimeoutRef.current = window.setTimeout(() => {
-        performScroll(href);
-        pendingScrollTimeoutRef.current = null;
-      }, 180);
-      return;
-    }
-
-    if (href.startsWith('/')) {
-      if (href === '/' && location.pathname === '/') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      }
-
-      navigate(href);
+  /** Repetir clic en un enlace de la página actual sube al principio. */
+  const handleSamePageClick = (href: string) => {
+    if (location.pathname === href) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
-  const isCurrentPath = (href: string) => location.pathname === href;
+  const isCurrentPath = (href: string) =>
+    href === '/' ? location.pathname === '/' : location.pathname.startsWith(href);
 
   return (
     <header ref={headerRef} className={styles.header}>
       <div className={styles.inner}>
         {/* Logo */}
-        <a className={styles.logo} href="/" onClick={e => { e.preventDefault(); scrollTo('/'); }} aria-label="Ir al inicio de Alcocars">
+        <Link
+          to="/"
+          className={styles.logo}
+          onClick={() => handleSamePageClick('/')}
+          aria-label="Ir al inicio de Alcocars"
+        >
           <img src="/images/logo.png" alt="Alcocars" className={styles.logoImage} loading="eager" />
-        </a>
+        </Link>
 
         {/* Desktop Nav */}
-        <nav className={styles.nav}>
+        <nav className={styles.nav} aria-label="Navegación principal">
           {navLinks.map(link => (
             <div key={link.label} className={styles.navItem}>
-              <a
-                href={link.href}
+              <Link
+                to={link.href}
                 className={`${styles.navLink} ${isCurrentPath(link.href) ? styles.navLinkActive : ''}`}
-                onClick={e => { e.preventDefault(); scrollTo(link.href); }}
+                aria-current={isCurrentPath(link.href) ? 'page' : undefined}
+                onClick={() => handleSamePageClick(link.href)}
               >
                 {link.label}
-              </a>
+              </Link>
             </div>
           ))}
         </nav>
 
         {/* CTA */}
-        <a
-          href="#hero"
-          className={styles.cta}
-          onClick={e => { e.preventDefault(); scrollTo('#hero'); }}
-        >
+        <Link to="/reserva" className={styles.cta}>
           <span>Reservar</span>
-        </a>
+        </Link>
 
         {/* Mobile hamburger */}
         <button
           className={`${styles.burger} ${mobileOpen ? styles.burgerOpen : ''}`}
           onClick={() => setMobileOpen(p => !p)}
-          aria-label="Abrir menú"
+          aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
+          aria-expanded={mobileOpen}
         >
           <span /><span /><span />
         </button>
@@ -176,18 +144,18 @@ export default function SmartHeader() {
       {mobileOpen && (
         <div className={styles.mobileMenu}>
           {navLinks.map(link => (
-            <a
+            <Link
               key={link.label}
-              href={link.href}
+              to={link.href}
               className={styles.mobileLink}
-              onClick={e => { e.preventDefault(); scrollTo(link.href); }}
+              onClick={() => handleSamePageClick(link.href)}
             >
               {link.label}
-            </a>
+            </Link>
           ))}
-          <a href="#hero" className={styles.mobileCta} onClick={e => { e.preventDefault(); scrollTo('#hero'); }}>
+          <Link to="/reserva" className={styles.mobileCta}>
             Reservar ahora →
-          </a>
+          </Link>
         </div>
       )}
     </header>

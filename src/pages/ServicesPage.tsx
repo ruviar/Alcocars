@@ -6,6 +6,7 @@ import serviceAdaptadoImage from '../assets/images/service-adaptado.webp';
 import serviceAeroImage from '../assets/images/service-aero.webp';
 import serviceHorasImage from '../assets/images/service-horas.webp';
 import serviceRentingImage from '../assets/images/service-renting.webp';
+import serviceAsistenciaImage from '../assets/images/values-bg.webp';
 import styles from './ServicesPage.module.css';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -85,6 +86,21 @@ const services: Service[] = [
       </svg>
     ),
     cta: 'Consultar flota',
+  },
+  {
+    id: 'viajamos-contigo',
+    number: '05',
+    title: 'Viajamos Contigo',
+    description:
+      'Asistencia en carretera 24 horas incluida en todos los alquileres. Contamos con una red de talleres propios y concertados y vehículo de sustitución en caso de avería, para que viajes con total tranquilidad.',
+    image: serviceAsistenciaImage,
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M12 3 5 6v5.5c0 4.4 2.9 8.1 7 9.5 4.1-1.4 7-5.1 7-9.5V6l-7-3Z" />
+        <path d="m9 12 2 2 4-4.5" />
+      </svg>
+    ),
+    cta: 'Conocer la cobertura',
   },
 ];
 
@@ -182,7 +198,7 @@ export default function ServicesPage() {
           <p className={styles.kicker}>Servicios</p>
           <h1 className={styles.heroTitle}>MÁS QUE ALQUILAR,<br />DAMOS SOLUCIONES</h1>
           <p className={styles.heroSubtitle}>
-            Cuatro servicios diseñados para adaptarse a ti: tu agenda, tu destino y tus necesidades de movilidad.
+            Cinco servicios diseñados para adaptarse a ti: tu agenda, tu destino y tus necesidades de movilidad.
           </p>
         </header>
 

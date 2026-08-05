@@ -209,3 +209,11 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Regla añadida: con cuatro tarjetas de valores, en escritorio el grid pasa a 4 columnas.
+   Las reglas responsive anteriores (2 y 1 columnas) siguen aplicando por debajo de 1040px. */
+@media (min-width: 1041px) {
+  .valuesGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

@@ -68,7 +68,7 @@ export default function LocationsMap() {
                 <strong>Horario:</strong> {selectedOffice.hours}
               </li>
               <li>
-                <strong>Telefono:</strong> {selectedOffice.phone}
+                <strong>Teléfono:</strong> {selectedOffice.phone}
               </li>
               <li>
                 <strong>Email:</strong> {selectedOffice.email}

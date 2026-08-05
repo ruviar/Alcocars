@@ -46,6 +46,7 @@ function parse(overrides: Record<string, unknown> = {}) {
 describe('createBookingRequest', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(prisma, '$transaction').mockImplementation((fn: any) => fn(tx));
 
     tx.office.findUnique.mockResolvedValue({

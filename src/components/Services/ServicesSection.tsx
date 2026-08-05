@@ -1,28 +1,28 @@
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import serviceAeroImage from '../../assets/images/service-aero.webp';
+import serviceHorasImage from '../../assets/images/service-horas.webp';
+import serviceRentingImage from '../../assets/images/service-renting.webp';
 import styles from './ServicesSection.module.css';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const services = [
   {
-    title: 'Renting Flexible',
-    text: 'Suscripcion por semanas o meses, con cambio de categoria en menos de 24h y mantenimiento incluido.',
-    image:
-      'https://images.unsplash.com/photo-1485463598028-44d6c47bf23f?w=1400&q=80',
+    title: 'Renting flexible',
+    text: 'Corto, medio y largo plazo, para empresas y particulares. Una propuesta a medida para tus necesidades puntuales de flota.',
+    image: serviceRentingImage,
   },
   {
     title: 'Alquiler por horas',
-    text: 'Recoge, conduce y devuelve cuando quieras. Reserva inmediata desde tu movil sin papeleo innecesario.',
-    image:
-      'https://images.unsplash.com/photo-1493238792000-8113da705763?w=1400&q=80',
+    text: 'Recoge, conduce y devuelve el mismo día. Solicita tu reserva desde el móvil, sin papeleo innecesario.',
+    image: serviceHorasImage,
   },
   {
     title: 'Entregas en aeropuerto',
-    text: 'Seguimiento de vuelo y entrega en terminal para que empieces tu viaje en minutos.',
-    image:
-      'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1400&q=80',
+    text: 'Recogida y entrega en el aeropuerto de Zaragoza previa solicitud, para que empieces tu viaje sin esperas.',
+    image: serviceAeroImage,
   },
 ];
 

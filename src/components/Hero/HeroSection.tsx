@@ -41,7 +41,7 @@ export default function HeroSection() {
       <div ref={bgRef} className={styles.bg}>
         <img
           src="/images/fondo2.png"
-          alt="Premium vehicle fleet"
+          alt="Flota de vehículos de Alcocars"
           className={styles.bgImg}
         />
         <div className={styles.bgOverlay} />
@@ -59,7 +59,7 @@ export default function HeroSection() {
         {/* Tag */}
         <div ref={tagRef} className={styles.tag}>
           <span className={styles.tagDot} />
-          Renting premium · Aragón & Navarra
+          Alquiler y renting · Zaragoza · Navarra · Soria · La Rioja
         </div>
 
         {/* Headline - each line wrapped for GSAP reveal */}
@@ -77,12 +77,12 @@ export default function HeroSection() {
 
         <p ref={subRef} className={styles.sub}>
           Renting flexible, alquiler por horas y entrega en aeropuerto.<br />
-          Tres sedes. Una sola experiencia de élite.
+          Tres oficinas en Zaragoza, Tudela y Ágreda, con el trato cercano de siempre.
         </p>
 
         {/* Stats row */}
         <div className={styles.stats}>
-          {[['+500', 'Vehículos'], ['3', 'Ciudades'], ['24h', 'Soporte'], ['98%', 'Satisfacción']].map(([val, lbl]) => (
+          {[['3', 'Oficinas'], ['24 h', 'Asistencia en carretera'], ['200', 'km/día incluidos'], ['61 €', 'Desde, al día']].map(([val, lbl]) => (
             <div key={lbl} className={styles.stat}>
               <span className={styles.statVal}>{val}</span>
               <span className={styles.statLbl}>{lbl}</span>

@@ -10,7 +10,7 @@ export default function CompanyShowcase() {
         <p className={styles.kicker}>Nuestra base</p>
         <h2 className={styles.title}>Alcocars en su entorno real</h2>
         <p className={styles.copy}>
-          Una flota cuidada y un equipo cercano para que alquilar sea facil, rapido y sin sorpresas.
+          Una flota cuidada y un equipo cercano para que alquilar sea fácil, rápido y sin sorpresas.
         </p>
         <button type="button" className={styles.button} onClick={() => navigate('/empresa')}>
           Conocer la empresa

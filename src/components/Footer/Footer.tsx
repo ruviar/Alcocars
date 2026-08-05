@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { offices, officeLabel } from '../../data/offices';
+import { company, offices, officeLabel } from '../../data/offices';
 import styles from './Footer.module.css';
 
 const quickLinks = [
@@ -10,9 +10,10 @@ const quickLinks = [
 ];
 
 const interestLinks = [
+  { label: 'Tarifas', to: '/tarifas' },
+  { label: 'Preguntas frecuentes', to: '/faqs' },
   { label: 'Renting Flexible', to: '/servicios' },
-  { label: 'Alquiler por horas', to: '/servicios' },
-  { label: 'Vehículos adaptados', to: '/flota' },
+  { label: 'Vehículos adaptados', to: '/servicios' },
   { label: 'Blog', to: '/blog' },
   { label: 'Contacto', to: '/contacto' },
 ];
@@ -44,13 +45,29 @@ export default function Footer() {
         <div className={styles.grid}>
           <div className={styles.brandColumn}>
             <Link to="/" className={styles.logo} aria-label="Ir al inicio de Alcocars">
-              <span className={styles.logoMark}>AC</span>
-              <span className={styles.logoText}>Alcocars</span>
+              <img src="/images/logo.png" alt="Alcocars" className={styles.logoImage} loading="lazy" />
             </Link>
 
             <p className={styles.brandText}>
-              Soluciones de movilidad premium y renting flexible para empresas y particulares en Aragón y Navarra.
+              Alquiler y renting de vehículos multimarca en Zaragoza, Ágreda (Soria), Ribera Navarra y La Rioja.
+              Una marca del grupo Alcotrans.
             </p>
+
+            <ul className={styles.brandContact}>
+              <li>
+                <a className={styles.footerLink} href={`mailto:${company.email}`}>{company.email}</a>
+              </li>
+              <li>
+                <a
+                  className={styles.footerLink}
+                  href={`https://wa.me/${company.whatsapp.replace(/[^0-9]/g, '')}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  WhatsApp {company.whatsapp}
+                </a>
+              </li>
+            </ul>
           </div>
 
           <div className={styles.navColumn}>
@@ -102,7 +119,7 @@ export default function Footer() {
         </div>
 
         <div className={styles.legalBar}>
-          <p className={styles.copyright}>© 2026 Alcocars. Todos los derechos reservados.</p>
+          <p className={styles.copyright}>© {new Date().getFullYear()} Alcocars · Alcotrans, S.L. Todos los derechos reservados.</p>
 
           <ul className={styles.legalLinks}>
             {legalLinks.map(link => (

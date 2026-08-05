@@ -11,7 +11,7 @@ describe('getAllOffices', () => {
       { id: '1', slug: 'soria', city: 'Soria' },
       { id: '2', slug: 'zaragoza', city: 'Zaragoza' },
     ];
-    vi.spyOn(prisma.office, 'findMany').mockResolvedValue(mockOffices as any);
+    vi.spyOn(prisma.office, 'findMany').mockResolvedValue(mockOffices as never);
 
     const result = await getAllOffices();
 

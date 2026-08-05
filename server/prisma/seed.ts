@@ -322,9 +322,9 @@ async function main() {
   // Upsert default admin user
   const passwordHash = await bcrypt.hash('admin123', 10);
   await prisma.adminUser.upsert({
-    where: { email: 'admin@alocars.es' },
+    where: { email: 'admin@alcocars.es' },
     update: { name: 'Administrador', passwordHash },
-    create: { email: 'admin@alocars.es', passwordHash, name: 'Administrador' },
+    create: { email: 'admin@alcocars.es', passwordHash, name: 'Administrador' },
   });
   console.log('✅ Admin user seeded');
 

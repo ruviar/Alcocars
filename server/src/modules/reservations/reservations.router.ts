@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { categoryAvailabilityQuerySchema, checkoutBodySchema } from './reservations.schema';
 import {
   ReservationError,
@@ -22,7 +22,7 @@ const STATUS_BY_ERROR: Record<string, number> = {
 
 export async function reservationsRouter(app: FastifyInstance) {
   // GET /api/reservations/offers?officeSlug=zaragoza&startDate=…&endDate=…
-  const offersHandler = async (request: any, reply: any) => {
+  const offersHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const parsed = categoryAvailabilityQuerySchema.safeParse(request.query);
     if (!parsed.success) {
       return reply.status(422).send({

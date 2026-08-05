@@ -1,0 +1,363 @@
+.page {
+  background: var(--coal);
+  color: var(--chalk);
+  padding-top: calc(72px + clamp(52px, 8vw, 112px));
+  padding-bottom: clamp(70px, 9vw, 132px);
+}
+
+.container {
+  width: var(--container);
+  margin-inline: auto;
+  padding-inline: clamp(20px, 4vw, 60px);
+}
+
+/* ── Page header ────────────────────────────────────────────────── */
+
+.header {
+  max-width: 760px;
+  margin-bottom: clamp(40px, 6vw, 64px);
+}
+
+.kicker {
+  margin-bottom: 10px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--silver);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(56px, 9vw, 128px);
+  line-height: 0.86;
+  letter-spacing: 1px;
+  color: var(--chalk);
+}
+
+.subtitle {
+  margin-top: 16px;
+  font-size: clamp(15px, 1.8vw, 19px);
+  line-height: 1.7;
+  color: var(--silver);
+  max-width: 56ch;
+}
+
+/* ── Category section ──────────────────────────────────────────── */
+
+.section {
+  margin-bottom: clamp(36px, 5vw, 56px);
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1;
+  color: var(--chalk);
+  letter-spacing: 1px;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Table ──────────────────────────────────────────────────────── */
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--obsidian);
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  width: 100%;
+  min-width: 920px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table thead th {
+  padding: 12px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  text-align: right;
+  color: var(--silver);
+  background: var(--graphite);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.table tbody tr:not(:last-child) th,
+.table tbody tr:not(:last-child) td {
+  border-bottom: 1px solid var(--border);
+}
+
+.table tbody tr {
+  transition: background var(--transition-fast);
+}
+
+.table tbody tr:hover {
+  background: rgba(1, 35, 105, 0.03);
+}
+
+.rowName {
+  padding: 14px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--chalk);
+  min-width: 190px;
+  line-height: 1.35;
+}
+
+.priceCell,
+.dataCell {
+  padding: 14px;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--chalk);
+  white-space: nowrap;
+}
+
+.dataCell {
+  color: var(--silver);
+}
+
+/* Sutil resaltado de la columna de 7 días (mejor precio por día) */
+
+.bestHead {
+  background: rgba(175, 226, 58, 0.16);
+  color: var(--chalk);
+}
+
+.bestTag {
+  display: block;
+  margin-top: 2px;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--accent-dim);
+}
+
+.bestCell {
+  background: rgba(175, 226, 58, 0.1);
+  font-weight: 700;
+}
+
+/* Fila «bajo consulta» */
+
+.consultCell {
+  padding: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--silver);
+}
+
+/* Botones de fila */
+
+.actionCell {
+  padding: 10px 14px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.rowBtn {
+  padding: 8px 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--chalk);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.rowBtn:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent-dim);
+  transform: translateY(-1px);
+}
+
+.rowBtnSecondary {
+  background: transparent;
+  color: var(--chalk);
+  border-color: var(--border);
+}
+
+.rowBtnSecondary:hover {
+  background: transparent;
+  border-color: var(--accent);
+  color: var(--chalk);
+}
+
+/* ── Info panels ────────────────────────────────────────────────── */
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 16px;
+  margin-top: clamp(44px, 6vw, 72px);
+}
+
+@media (max-width: 860px) {
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.infoPanel {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--obsidian);
+  padding: clamp(22px, 3vw, 32px);
+}
+
+.infoTitle {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1;
+  letter-spacing: 1px;
+  color: var(--chalk);
+  margin-bottom: 18px;
+}
+
+/* Checklist */
+
+.checkList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checkList li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--silver);
+}
+
+.check {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(175, 226, 58, 0.2);
+  color: var(--chalk);
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+/* Extras */
+
+.extrasList {
+  display: flex;
+  flex-direction: column;
+}
+
+.extraItem {
+  padding: 12px 0;
+}
+
+.extraItem:not(:last-child) {
+  border-bottom: 1px solid var(--border);
+}
+
+.extraRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.extraLabel {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--chalk);
+}
+
+.extraPrice {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--chalk);
+  white-space: nowrap;
+}
+
+.extraHint {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--silver);
+}
+
+.extrasNote {
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--silver);
+}
+
+/* ── Final notes ────────────────────────────────────────────────── */
+
+.notes {
+  margin-top: clamp(36px, 5vw, 56px);
+  border-left: 3px solid var(--accent);
+  padding: 4px 0 4px clamp(18px, 3vw, 28px);
+  max-width: 76ch;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notes p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--silver);
+}
+
+.notesTitle {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3vw, 30px);
+  line-height: 1;
+  letter-spacing: 1px;
+  color: var(--chalk);
+}
+
+.noteLink {
+  color: var(--chalk);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 3px;
+  transition: color var(--transition-fast);
+}
+
+.noteLink:hover {
+  color: var(--accent-dim);
+}
+
+.notesFine {
+  font-size: 13px;
+}
+
+/* ── Mobile ─────────────────────────────────────────────────────── */
+
+@media (max-width: 580px) {
+  .page {
+    padding-top: calc(72px + 34px);
+  }
+}

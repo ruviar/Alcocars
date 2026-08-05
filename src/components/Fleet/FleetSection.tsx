@@ -44,7 +44,7 @@ function TariffCard({ tariff }: { tariff: TariffEntry }) {
           <h3 className={pageStyles.cardName}>{tariff.name}</h3>
           <p className={pageStyles.cardConsult}>Precio bajo consulta</p>
           <p className={pageStyles.cardConsultNote}>
-            Contactanos para conocer disponibilidad y tarifas.
+            Contáctanos para conocer disponibilidad y tarifas.
           </p>
         </div>
         <div className={pageStyles.cardFooter}>
@@ -69,12 +69,12 @@ function TariffCard({ tariff }: { tariff: TariffEntry }) {
         <h3 className={pageStyles.cardName}>{tariff.name}</h3>
         <div className={pageStyles.priceWrap}>
           <span className={pageStyles.price}>{pricePerDay}€</span>
-          <span className={pageStyles.priceUnit}>/dia</span>
+          <span className={pageStyles.priceUnit}>/día</span>
         </div>
         <ul className={pageStyles.detailsList}>
           <li>
             <span className={pageStyles.detailDot} aria-hidden="true">·</span>
-            {tariff.kmPerDay} km/dia incluidos
+            {tariff.kmPerDay} km/día incluidos
           </li>
           <li>
             <span className={pageStyles.detailDot} aria-hidden="true">·</span>
@@ -117,10 +117,10 @@ export default function FleetSection() {
       <div className={pageStyles.container}>
         <header className={pageStyles.header}>
           <p className={pageStyles.kicker}>Destacados</p>
-          <h2 className={pageStyles.title}>LO MAS RELEVANTE</h2>
+          <h2 className={pageStyles.title}>LO MÁS RELEVANTE</h2>
           <p className={pageStyles.subtitle}>
-            Te mostramos una seleccion rapida con las gamas mas solicitadas.
-            Si quieres ver todos los modelos y tarifas, puedes abrir el catalogo completo.
+            Te mostramos una selección rápida con las gamas más solicitadas.
+            Si quieres ver todos los modelos y tarifas, puedes abrir el catálogo completo.
           </p>
         </header>
 
@@ -133,16 +133,16 @@ export default function FleetSection() {
         </section>
 
         <div className={styles.sectionActions}>
-          <p className={styles.sectionHint}>Necesitas comparar todas las opciones de la flota?</p>
+          <p className={styles.sectionHint}>¿Necesitas comparar todas las opciones de la flota?</p>
           <Link to="/flota" className={styles.allFleetButton}>
             Ver flota completa
           </Link>
         </div>
 
         <p className={pageStyles.disclaimer}>
-          * Precios desde. El total exacto depende del numero de dias, kilometros previstos y extras
-          seleccionados. La reserva esta sujeta a disponibilidad y confirmacion en un plazo de
-          24-48 h.
+          * Precios desde, con IVA incluido. El total exacto depende del número de días, kilómetros
+          previstos y extras seleccionados. La reserva está sujeta a disponibilidad y confirmación
+          en un plazo de 24–48 h laborables.
         </p>
       </div>
     </section>

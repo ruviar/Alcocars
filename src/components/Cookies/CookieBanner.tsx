@@ -1,19 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './CookieBanner.module.css';
 
 const COOKIE_CONSENT_KEY = 'alcocars.cookie-consent.v1';
 
 export default function CookieBanner() {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const consentValue = window.localStorage.getItem(COOKIE_CONSENT_KEY);
-
-    if (!consentValue) {
-      setIsVisible(true);
-    }
-  }, []);
+  // Estado inicial leído de localStorage de forma perezosa: sin efecto ni doble render.
+  const [isVisible, setIsVisible] = useState(
+    () => !window.localStorage.getItem(COOKIE_CONSENT_KEY),
+  );
 
   const handleAccept = () => {
     window.localStorage.setItem(COOKIE_CONSENT_KEY, 'accepted');
@@ -27,15 +22,16 @@ export default function CookieBanner() {
   return (
     <aside className={styles.banner} role="dialog" aria-live="polite" aria-label="Aviso de cookies">
       <p className={styles.text}>
-        Usamos cookies para mejorar tu experiencia y analizar el uso del sitio. Consulta nuestra{' '}
+        Este sitio solo utiliza almacenamiento técnico imprescindible para funcionar; no usamos
+        cookies de publicidad ni de seguimiento. Más detalles en la{' '}
         <Link className={styles.link} to="/legal/politica-cookies">
-          Politica de Cookies
+          política de cookies
         </Link>
         .
       </p>
 
       <button type="button" className={styles.button} onClick={handleAccept}>
-        Aceptar
+        Entendido
       </button>
     </aside>
   );

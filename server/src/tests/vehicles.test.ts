@@ -45,7 +45,7 @@ describe('getAvailableVehicles', () => {
       endDate: new Date('2026-04-05'),
     });
 
-    const call = vi.mocked(prisma.vehicle.findMany).mock.calls[0][0] as any;
+    const call = vi.mocked(prisma.vehicle.findMany).mock.calls[0][0] as { where: { category?: string } };
     expect(call.where.category).toBeUndefined();
   });
 });

@@ -44,6 +44,17 @@ const values: ValueItem[] = [
       </svg>
     ),
   },
+  {
+    title: 'Viajamos Contigo',
+    detail: 'Asistencia en carretera 24 horas con red de talleres propios y concertados y vehículo de sustitución en caso de avería.',
+    icon: (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" />
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 3v5M12 16v5M3 12h5M16 12h5" />
+      </svg>
+    ),
+  },
 ];
 
 export default function CompanyPage() {
@@ -153,12 +164,12 @@ export default function CompanyPage() {
   return (
     <main ref={pageRef} className={styles.page}>
       <section className={`${styles.heroSection} ${styles.sectionWrapper}`}>
-        <img src={heroBg} alt="Hero Background" className={styles.bgImage} />
+        <img src={heroBg} alt="" className={styles.bgImage} />
         <div className={styles.bgOverlay} />
         <div className={styles.content}>
           <div className={styles.heroSplit}>
             <div>
-              <p className={styles.kicker}>Quienes Somos</p>
+              <p className={styles.kicker}>Quiénes somos</p>
               <h1 className={styles.heroTitle}>
                 <span className={styles.lineMask}>
                   <span className={`${styles.heroLine} ${styles.revealLine}`}>TE DAMOS MOVILIDAD</span>
@@ -170,14 +181,14 @@ export default function CompanyPage() {
             </div>
 
             <p className={`${styles.heroSubtitle} ${styles.revealText}`}>
-              Alquiler de vehículos en Zaragoza, Tudela y Soria de forma económica, rápida y segura.
+              Alquiler de vehículos en Zaragoza, Tudela y Ágreda (Soria) de forma económica, rápida y segura.
             </p>
           </div>
         </div>
       </section>
 
       <section className={`${styles.storySection} ${styles.sectionWrapper}`}>
-        <img src={missionBg} alt="Mission Background" className={styles.bgImage} />
+        <img src={missionBg} alt="" className={styles.bgImage} />
         <div className={styles.bgOverlay} />
         <div className={styles.content}>
           <article className={styles.splitBlock}>
@@ -188,9 +199,10 @@ export default function CompanyPage() {
             </div>
 
             <p className={`${styles.splitText} ${styles.revealText}`}>
-              Somos especialistas en alquiler de coches. En Alcocars podrás encontrar tu lugar ideal de alquiler de
-              furgonetas y caravanas. Entendemos los problemas de nuestros clientes y tratamos de solucionarlos
-              facilitando que los viajes sean lo más agradables y cómodos posibles.
+              Alcocars es la marca de alquiler y venta de vehículos multimarca del grupo Alcotrans, con oficinas en
+              Zaragoza, Tudela y Ágreda (Soria) y cobertura también en la Ribera Navarra y La Rioja. Ponemos a tu
+              disposición una flota de turismos, furgonetas de carga y de pasajeros, todoterrenos 4x4 y autocaravanas
+              para que particulares y empresas se muevan de forma económica, rápida y segura.
             </p>
           </article>
 
@@ -202,15 +214,16 @@ export default function CompanyPage() {
             </div>
 
             <p className={`${styles.splitText} ${styles.revealText}`}>
-              Porque la actividad de las empresas no es lineal, además del renting tradicional, Alcocars propone las
-              mejores ofertas para necesidades puntuales en tu flota.
+              Porque la actividad de las empresas no es lineal, además del renting tradicional, en Alcocars preparamos
+              propuestas a medida para las necesidades puntuales de tu flota, sin ataduras: corto, medio y largo plazo,
+              tanto para empresas como para particulares.
             </p>
           </article>
         </div>
       </section>
 
       <section className={`${styles.valuesSection} ${styles.sectionWrapper}`}>
-        <img src={valuesBg} alt="Values Background" className={styles.bgImage} />
+        <img src={valuesBg} alt="" className={styles.bgImage} />
         <div className={styles.bgOverlay} />
         <div className={styles.content}>
           <div className={styles.valuesHeader}>
