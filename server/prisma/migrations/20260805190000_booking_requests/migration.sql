@@ -124,3 +124,10 @@ CREATE INDEX "email_logs_reservationId_idx" ON "email_logs"("reservationId");
 ALTER TABLE "email_logs"
   ADD CONSTRAINT "email_logs_reservationId_fkey"
   FOREIGN KEY ("reservationId") REFERENCES "reservations"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- Con vehicleId opcional, la semántica correcta al borrar una unidad es
+-- conservar la reserva sin vehículo (SET NULL), no bloquear el borrado.
+ALTER TABLE "reservations" DROP CONSTRAINT "reservations_vehicleId_fkey";
+ALTER TABLE "reservations"
+  ADD CONSTRAINT "reservations_vehicleId_fkey"
+  FOREIGN KEY ("vehicleId") REFERENCES "vehicles"("id") ON DELETE SET NULL ON UPDATE CASCADE;
