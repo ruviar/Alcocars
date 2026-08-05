@@ -1,7 +1,7 @@
 {
-  "name": "alocars-server",
+  "name": "alcocars-server",
   "version": "1.0.0",
-  "description": "Alocars REST API – Fastify + Prisma + PostgreSQL",
+  "description": "Alcocars REST API \u2013 Fastify + Prisma + PostgreSQL",
   "type": "commonjs",
   "scripts": {
     "dev": "tsx watch src/server.ts",
