@@ -1,5 +1,8 @@
+'use client';
+
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { gsap } from 'gsap';
 import styles from './SmartHeader.module.css';
 
@@ -18,7 +21,7 @@ export default function SmartHeader() {
   const headerRef = useRef<HTMLElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const lastScrollY = useRef(0);
-  const location = useLocation();
+  const pathname = usePathname() ?? '';
 
   useEffect(() => {
     const header = headerRef.current;
@@ -83,24 +86,24 @@ export default function SmartHeader() {
     // el "cascading render" que señala la regla es exactamente lo que queremos.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileOpen(false);
-  }, [location.pathname]);
+  }, [pathname]);
 
   /** Repetir clic en un enlace de la página actual sube al principio. */
   const handleSamePageClick = (href: string) => {
-    if (location.pathname === href) {
+    if (pathname === href) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const isCurrentPath = (href: string) =>
-    href === '/' ? location.pathname === '/' : location.pathname.startsWith(href);
+    href === '/' ? pathname === '/' : pathname.startsWith(href);
 
   return (
     <header ref={headerRef} className={styles.header}>
       <div className={styles.inner}>
         {/* Logo */}
         <Link
-          to="/"
+          href="/"
           className={styles.logo}
           onClick={() => handleSamePageClick('/')}
           aria-label="Ir al inicio de Alcocars"
@@ -113,7 +116,7 @@ export default function SmartHeader() {
           {navLinks.map(link => (
             <div key={link.label} className={styles.navItem}>
               <Link
-                to={link.href}
+                href={link.href}
                 className={`${styles.navLink} ${isCurrentPath(link.href) ? styles.navLinkActive : ''}`}
                 aria-current={isCurrentPath(link.href) ? 'page' : undefined}
                 onClick={() => handleSamePageClick(link.href)}
@@ -125,7 +128,7 @@ export default function SmartHeader() {
         </nav>
 
         {/* CTA */}
-        <Link to="/reserva" className={styles.cta}>
+        <Link href="/reserva" className={styles.cta}>
           <span>Reservar</span>
         </Link>
 
@@ -146,14 +149,14 @@ export default function SmartHeader() {
           {navLinks.map(link => (
             <Link
               key={link.label}
-              to={link.href}
+              href={link.href}
               className={styles.mobileLink}
               onClick={() => handleSamePageClick(link.href)}
             >
               {link.label}
             </Link>
           ))}
-          <Link to="/reserva" className={styles.mobileCta}>
+          <Link href="/reserva" className={styles.mobileCta}>
             Reservar ahora →
           </Link>
         </div>

@@ -27,7 +27,7 @@ export const blogPosts: BlogPost[] = [
     category: 'Todoterrenos',
     readingTime: '6 min',
     date: '17 Jul 2026',
-    image: valuesImage,
+    image: valuesImage.src,
     sections: [
       {
         paragraphs: [
@@ -72,7 +72,7 @@ export const blogPosts: BlogPost[] = [
     category: 'Consejos',
     readingTime: '7 min',
     date: '12 Jun 2026',
-    image: missionImage,
+    image: missionImage.src,
     sections: [
       {
         paragraphs: [
@@ -115,7 +115,7 @@ export const blogPosts: BlogPost[] = [
     category: 'Viajes',
     readingTime: '8 min',
     date: '15 May 2026',
-    image: horasImage,
+    image: horasImage.src,
     sections: [
       {
         paragraphs: [
@@ -160,7 +160,7 @@ export const blogPosts: BlogPost[] = [
     category: 'Consejos',
     readingTime: '5 min',
     date: '10 Abr 2026',
-    image: heroCompanyImage,
+    image: heroCompanyImage.src,
     sections: [
       {
         paragraphs: [
@@ -205,7 +205,7 @@ export const blogPosts: BlogPost[] = [
     category: 'Empresas',
     readingTime: '7 min',
     date: '20 Mar 2026',
-    image: rentingImage,
+    image: rentingImage.src,
     sections: [
       {
         paragraphs: [

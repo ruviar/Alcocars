@@ -23,6 +23,7 @@ export function saveLastSearch(search: LastSearch): void {
 }
 
 export function readLastSearch(): LastSearch | null {
+  if (typeof window === 'undefined') return null;
   try {
     const raw = window.sessionStorage.getItem(KEY);
     if (!raw) return null;

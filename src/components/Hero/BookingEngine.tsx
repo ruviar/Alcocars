@@ -1,10 +1,13 @@
+'use client';
+
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { DayPicker, type ClassNames, type DateRange } from 'react-day-picker';
 import { addDays, format, startOfToday } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { officeLabel, offices } from '../../data/offices';
 import { saveLastSearch } from '../../lib/lastSearch';
+import { buildReservaHref } from '../../lib/reservaQuery';
 import styles from './BookingEngine.module.css';
 
 const locations = offices.map((office) => office.city);
@@ -26,7 +29,7 @@ function getRangeLabel(range: DateRange | undefined) {
 }
 
 export default function BookingEngine() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const today = startOfToday();
   const [location, setLocation] = useState('Zaragoza');
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => ({
@@ -120,15 +123,14 @@ export default function BookingEngine() {
       });
     }
 
-    navigate('/reserva', {
-      state: {
-        dateRange,
+    router.push(
+      buildReservaHref({
         location,
-        rentalCategory,
-        // Legacy compatibility for pages still reading vehicleType from state
-        vehicleType: rentalCategory,
-      },
-    });
+        category: rentalCategory === 'Cualquier gama' ? undefined : rentalCategory,
+        from: dateRange?.from,
+        to: dateRange?.to,
+      }),
+    );
   };
 
   return (

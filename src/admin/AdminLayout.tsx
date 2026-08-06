@@ -1,4 +1,8 @@
-import { Link, Navigate, NavLink, Outlet, useNavigate } from 'react-router-dom';
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { clearSession, getAdminUser, isLoggedIn } from './auth';
 import styles from './admin.module.css';
 
@@ -6,7 +10,7 @@ const navItems = [
   {
     to: '/admin',
     label: 'Panel',
-    end: true,
+    exact: true,
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <rect x="3" y="3" width="7" height="9" rx="1" />
@@ -19,7 +23,7 @@ const navItems = [
   {
     to: '/admin/reservas',
     label: 'Reservas',
-    end: false,
+    exact: false,
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -30,7 +34,7 @@ const navItems = [
   {
     to: '/admin/vehiculos',
     label: 'Vehículos',
-    end: false,
+    exact: false,
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11m-14 0h14m-14 0a2 2 0 0 0-2 2v4h2m14-6a2 2 0 0 1 2 2v4h-2m-14 0v2h2v-2m10 0v2h2v-2m-14 0h12" />
@@ -40,7 +44,7 @@ const navItems = [
   {
     to: '/admin/clientes',
     label: 'Clientes',
-    end: false,
+    exact: false,
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <circle cx="9" cy="8" r="3.5" />
@@ -51,7 +55,7 @@ const navItems = [
   {
     to: '/admin/correo',
     label: 'Correo',
-    end: false,
+    exact: false,
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <rect x="3" y="5" width="18" height="14" rx="2" />
@@ -61,18 +65,40 @@ const navItems = [
   },
 ];
 
-export default function AdminLayout() {
-  const navigate = useNavigate();
-  const user = getAdminUser();
+/**
+ * Cascarón del panel: sidebar + guard de sesión.
+ *
+ * La sesión vive en localStorage (solo cliente), así que el guard se evalúa
+ * tras montar: el HTML del servidor no puede saber si hay token. Hasta
+ * entonces se muestra un estado de carga neutro para evitar parpadeos.
+ */
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const pathname = usePathname() ?? '';
+  const [authState, setAuthState] = useState<'checking' | 'ok'>('checking');
 
-  if (!isLoggedIn()) {
-    return <Navigate to="/admin/login" replace />;
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      router.replace('/admin/login');
+      return;
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- guard de sesión tras hidratar
+    setAuthState('ok');
+  }, [router, pathname]);
+
+  if (authState !== 'ok') {
+    return <p className={styles.loading}>Cargando panel…</p>;
   }
+
+  const user = getAdminUser();
 
   const handleLogout = () => {
     clearSession();
-    navigate('/admin/login', { replace: true });
+    router.replace('/admin/login');
   };
+
+  const isActive = (item: (typeof navItems)[number]) =>
+    item.exact ? pathname === item.to : pathname.startsWith(item.to);
 
   return (
     <div className={styles.shell}>
@@ -84,17 +110,15 @@ export default function AdminLayout() {
 
         <nav className={styles.sidebarNav} aria-label="Secciones del panel">
           {navItems.map((item) => (
-            <NavLink
+            <Link
               key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
-                `${styles.sidebarLink} ${isActive ? styles.sidebarLinkActive : ''}`
-              }
+              href={item.to}
+              className={`${styles.sidebarLink} ${isActive(item) ? styles.sidebarLinkActive : ''}`}
+              aria-current={isActive(item) ? 'page' : undefined}
             >
               {item.icon}
               {item.label}
-            </NavLink>
+            </Link>
           ))}
         </nav>
 
@@ -103,15 +127,13 @@ export default function AdminLayout() {
           <button type="button" className={styles.sidebarLogout} onClick={handleLogout}>
             Cerrar sesión
           </button>
-          <Link to="/" className={styles.sidebarPublicLink}>
+          <Link href="/" className={styles.sidebarPublicLink}>
             Ver web pública →
           </Link>
         </div>
       </aside>
 
-      <main className={styles.main}>
-        <Outlet />
-      </main>
+      <main className={styles.main}>{children}</main>
     </div>
   );
 }

@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { COUNTRIES, DEFAULT_COUNTRY, type Country } from './countries';
 import styles from './PhoneInput.module.css';

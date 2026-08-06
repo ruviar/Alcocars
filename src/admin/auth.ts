@@ -10,10 +10,12 @@ export interface AdminUser {
 }
 
 export function getToken(): string | null {
+  if (typeof window === 'undefined') return null;
   return window.localStorage.getItem(TOKEN_KEY);
 }
 
 export function getAdminUser(): AdminUser | null {
+  if (typeof window === 'undefined') return null;
   const raw = window.localStorage.getItem(USER_KEY);
   if (!raw) return null;
 

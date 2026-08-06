@@ -1,20 +1,26 @@
-import { useState, type FormEvent } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+'use client';
+
+import { useEffect, useState, type FormEvent } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { login } from './api';
 import { isLoggedIn } from './auth';
 import { errorLabel } from './format';
 import styles from './admin.module.css';
 
 export default function AdminLoginPage() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
 
-  if (isLoggedIn()) {
-    return <Navigate to="/admin" replace />;
-  }
+  // Con sesión activa no tiene sentido ver el login: al panel.
+  useEffect(() => {
+    if (isLoggedIn()) {
+      router.replace('/admin');
+    }
+  }, [router]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -25,7 +31,7 @@ export default function AdminLoginPage() {
 
     try {
       await login(email.trim(), password);
-      navigate('/admin', { replace: true });
+      router.replace('/admin');
     } catch (err) {
       setError(errorLabel(err));
     } finally {
@@ -83,7 +89,7 @@ export default function AdminLoginPage() {
         </button>
 
         <p className={styles.loginBack}>
-          <Link to="/">← Volver a la web pública</Link>
+          <Link href="/">← Volver a la web pública</Link>
         </p>
       </form>
     </main>

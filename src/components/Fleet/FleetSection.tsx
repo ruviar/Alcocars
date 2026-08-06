@@ -1,42 +1,31 @@
+'use client';
+
 import { addDays, startOfToday } from 'date-fns';
+import { buildReservaHref } from '../../lib/reservaQuery';
 import { readLastSearch } from '../../lib/lastSearch';
-import { Link, useNavigate } from 'react-router-dom';
-import { SUPER_CATEGORIES, tariffs, type SuperCategory, type TariffEntry } from '../../data/tariffs';
-import pageStyles from '../../pages/FleetPage.module.css';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { SUPER_CATEGORIES, tariffs, type TariffEntry } from '../../data/tariffs';
+import pageStyles from '../../views/FleetPage.module.css';
 import styles from './FleetSection.module.css';
 
-function mapSuperCategoryToVehicleType(category: SuperCategory): string {
-  const map: Record<SuperCategory, string> = {
-    Coches: 'Turismos',
-    Furgonetas: 'Furgonetas',
-    Todoterrenos: '4×4',
-    Autocaravanas: 'Autocaravanas',
-  };
-
-  return map[category];
-}
-
 function TariffCard({ tariff }: { tariff: TariffEntry }) {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleReserve = () => {
     const lastSearch = readLastSearch();
     const from = lastSearch ? new Date(lastSearch.from) : startOfToday();
     const to = lastSearch ? new Date(lastSearch.to) : addDays(from, 1);
 
-    navigate('/reserva', {
-      state: {
+    router.push(
+      buildReservaHref({
         location: lastSearch?.location ?? 'Zaragoza',
-        rentalCategory: mapSuperCategoryToVehicleType(tariff.superCategory),
-        vehicleType: mapSuperCategoryToVehicleType(tariff.superCategory),
-        superCategory: tariff.superCategory,
         tariffId: tariff.id,
-        dateRange: {
-          from,
-          to,
-        },
-      },
-    });
+        category: tariff.superCategory,
+        from,
+        to,
+      }),
+    );
   };
 
   if (tariff.consultOnly) {
@@ -54,7 +43,7 @@ function TariffCard({ tariff }: { tariff: TariffEntry }) {
           <button
             type="button"
             className={`${pageStyles.ctaBtn} ${pageStyles.ctaBtnSecondary}`}
-            onClick={() => navigate('/contacto')}
+            onClick={() => router.push('/contacto')}
           >
             Contactar →
           </button>
@@ -137,7 +126,7 @@ export default function FleetSection() {
 
         <div className={styles.sectionActions}>
           <p className={styles.sectionHint}>¿Necesitas comparar todas las opciones de la flota?</p>
-          <Link to="/flota" className={styles.allFleetButton}>
+          <Link href="/flota" className={styles.allFleetButton}>
             Ver flota completa
           </Link>
         </div>

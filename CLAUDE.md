@@ -6,10 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Frontend (raíz)
-npm run dev       # Vite dev server (proxy /api → http://localhost:3001)
-npm run build     # tsc -b && vite build
+npm run dev       # Next.js dev en :3000 (rewrite de /api → http://localhost:3001)
+npm run build     # next build (SSG/SSR + typecheck)
+npm run start     # Servir el build de producción
 npm run lint      # ESLint
-npm run preview   # Previsualizar build de producción
 
 # Backend (server/)
 npm run dev              # Fastify con tsx watch en :3001
@@ -21,7 +21,15 @@ npm run db:studio        # Prisma Studio
 
 ## Architecture
 
-**Alcocars** — web de alquiler y renting de vehículos (grupo Alcotrans, S.L.) para Zaragoza, Tudela y Ágreda (Soria). Monorepo: SPA React 19 + TypeScript + Vite en la raíz, API Fastify 5 + Prisma 6 + PostgreSQL (Supabase) en `server/`.
+**Alcocars** — web de alquiler y renting de vehículos (grupo Alcotrans, S.L.) para Zaragoza, Tudela y Ágreda (Soria). Monorepo: **Next.js 15 (App Router)** + React 19 + TypeScript en la raíz, API Fastify 5 + Prisma 6 + PostgreSQL (Supabase) en `server/`.
+
+### Next.js
+
+- Rutas en `src/app/`: grupo `(web)` con el chrome público y `admin/` con el suyo (login fuera del guard, panel dentro de `(panel)`). Los cuerpos de página viven en `src/views/` (¡no `src/pages/`, que activaría el Pages Router!).
+- SEO real: `metadata`/`generateMetadata` por ruta, blog y legales SSG (`generateStaticParams`), `app/sitemap.ts` y `app/robots.ts` generados, JSON-LD `AutoRental` en el layout raíz. Fuentes con `next/font` (variables `--font-display/body/mono`).
+- Leaflet no soporta SSR: `LocationsMapLazy` y `OfficesPageLazy` cargan con `dynamic({ ssr: false })`.
+- El estado inicial de `/reserva` viaja por query (`?gama=&recogida=&desde=&hasta=`, ver `src/lib/reservaQuery.ts`), no por state del router.
+- Frontend→API: en dev, rewrite de `next.config.ts`; en prod, `NEXT_PUBLIC_API_BASE_URL` (se hornea en el bundle).
 
 ### Fuentes de verdad (¡importante!)
 
@@ -31,17 +39,17 @@ npm run db:studio        # Prisma Studio
 
 ### Flujo de reserva
 
-1. `BookingEngine` (hero) o `FleetPage`/`TarifasPage` → `navigate('/reserva', { state })`.
+1. `BookingEngine` (hero) o `FleetPage`/`TarifasPage` → `router.push(buildReservaHref(...))` (query params).
 2. `CheckoutPage` (wizard de 4 pasos) → `POST /api/reservations/checkout` con `{tariffId, oficinas, fechas+horas, plannedKm, extras[{id,quantity}], client, consent}`.
 3. El servidor valida (Zod), recalcula el presupuesto, crea `Reservation` en transacción Serializable (con unidad asignada si hay disponibilidad; si no, `needsAvailabilityCheck=true` — **la solicitud nunca se rechaza por falta de hueco**) y envía dos emails vía Brevo: aviso interno (`NOTIFY_EMAIL`) y resguardo al cliente.
 4. Todo intento de email queda en la tabla `email_logs` (SENT/FAILED/SKIPPED). Sin `BREVO_API_KEY`, se escribe una vista previa en `server/.mail-preview/` y se registra SKIPPED; la respuesta HTTP informa al frontend con `notification.delivered` para avisar al usuario.
 5. Las horas se guardan en UTC convertidas desde Europe/Madrid (`server/src/utils/datetime.ts`, con cambio de hora resuelto y testeado).
 
-### Rutas del frontend (`src/App.tsx`)
+### Rutas del frontend (`src/app/`)
 
 `/` · `/flota` · `/tarifas` · `/servicios` · `/sedes` · `/empresa` · `/faqs` · `/blog` · `/blog/:slug` · `/contacto` · `/reserva` · `/legal/:slug` (aviso-legal, politica-privacidad, condiciones-alquiler, politica-cookies) · 404.
 
-`SmartHeader`, `Footer`, `WhatsAppFab`, `CookieBanner`, `RouteMeta` (title/description por ruta) y `ScrollToTop` son globales.
+`SmartHeader`, `Footer`, `WhatsAppFab` y `CookieBanner` los monta el layout del grupo `(web)`.
 
 ### API (`server/src/server.ts`)
 

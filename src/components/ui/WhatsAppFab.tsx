@@ -1,4 +1,6 @@
-import { useLocation } from 'react-router-dom';
+'use client';
+
+import { usePathname } from 'next/navigation';
 import { company } from '../../data/offices';
 import styles from './WhatsAppFab.module.css';
 
@@ -9,9 +11,9 @@ const PREFILLED_MESSAGE = 'Hola, me interesa recibir información sobre alquiler
  * Se oculta en el checkout para no tapar los botones del asistente de reserva.
  */
 export default function WhatsAppFab() {
-  const location = useLocation();
+  const pathname = usePathname() ?? '';
 
-  if (location.pathname.startsWith('/reserva')) {
+  if (pathname.startsWith('/reserva')) {
     return null;
   }
 

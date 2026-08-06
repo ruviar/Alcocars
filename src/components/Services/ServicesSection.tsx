@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -12,17 +14,17 @@ const services = [
   {
     title: 'Renting flexible',
     text: 'Corto, medio y largo plazo, para empresas y particulares. Una propuesta a medida para tus necesidades puntuales de flota.',
-    image: serviceRentingImage,
+    image: serviceRentingImage.src,
   },
   {
     title: 'Alquiler por horas',
     text: 'Recoge, conduce y devuelve el mismo día. Solicita tu reserva desde el móvil, sin papeleo innecesario.',
-    image: serviceHorasImage,
+    image: serviceHorasImage.src,
   },
   {
     title: 'Entregas en aeropuerto',
     text: 'Recogida y entrega en el aeropuerto de Zaragoza previa solicitud, para que empieces tu viaje sin esperas.',
-    image: serviceAeroImage,
+    image: serviceAeroImage.src,
   },
 ];
 

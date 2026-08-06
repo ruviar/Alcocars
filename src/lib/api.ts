@@ -1,4 +1,6 @@
-const RAW_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001';
+// En desarrollo queda vacío y manda el rewrite de next.config (proxy a :3001);
+// en producción se hornea NEXT_PUBLIC_API_BASE_URL en el bundle.
+const RAW_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
 const BASE = RAW_BASE.replace(/\/$/, '');
 
 export function buildUrl(path: string): string {

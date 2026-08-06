@@ -1,4 +1,6 @@
-import { Link } from 'react-router-dom';
+'use client';
+
+import Link from 'next/link';
 import { company, offices, officeLabel } from '../../data/offices';
 import styles from './Footer.module.css';
 
@@ -44,7 +46,7 @@ export default function Footer() {
       <div className={`container ${styles.inner}`}>
         <div className={styles.grid}>
           <div className={styles.brandColumn}>
-            <Link to="/" className={styles.logo} aria-label="Ir al inicio de Alcocars">
+            <Link href="/" className={styles.logo} aria-label="Ir al inicio de Alcocars">
               <img src="/images/logo.png" alt="Alcocars" className={styles.logoImage} loading="lazy" />
             </Link>
 
@@ -75,7 +77,7 @@ export default function Footer() {
             <ul className={styles.navList}>
               {quickLinks.map(link => (
                 <li key={link.label}>
-                  <Link className={styles.footerLink} to={link.to}>
+                  <Link className={styles.footerLink} href={link.to}>
                     <span className={styles.linkAccent} aria-hidden="true" />
                     {link.label}
                   </Link>
@@ -89,7 +91,7 @@ export default function Footer() {
             <ul className={styles.interestList}>
               {interestLinks.map(link => (
                 <li key={link.label}>
-                  <Link className={styles.footerLink} to={link.to}>
+                  <Link className={styles.footerLink} href={link.to}>
                     <span className={styles.linkAccent} aria-hidden="true" />
                     {link.label}
                   </Link>
@@ -124,7 +126,7 @@ export default function Footer() {
           <ul className={styles.legalLinks}>
             {legalLinks.map(link => (
               <li key={link.label}>
-                <Link to={link.to} className={styles.legalLink}>
+                <Link href={link.to} className={styles.legalLink}>
                   <span className={styles.linkAccent} aria-hidden="true" />
                   {link.label}
                 </Link>

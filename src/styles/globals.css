@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
-
 /* ─────────────────────────────────────────
    DESIGN TOKENS
 ───────────────────────────────────────── */
@@ -18,9 +16,7 @@
   --border-accent: rgba(175, 226, 58, 0.58);
   --error: #c0392b;
 
-  --font-display: 'Bebas Neue', sans-serif;
-  --font-body: 'Inter', sans-serif;
-  --font-mono: 'Space Mono', monospace;
+  /* --font-display / --font-body / --font-mono los define next/font en <html> */
 
   --radius-sm: 4px;
   --radius-md: 12px;
@@ -151,7 +147,4 @@ body::before {
 .leaflet-container { background: #E8EEF9 !important; }
 .leaflet-control-attribution { display: none !important; }
 
-#root {
-  min-height: 100vh;
-}
 
