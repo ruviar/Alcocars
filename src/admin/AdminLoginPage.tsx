@@ -3,8 +3,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { login } from './api';
-import { isLoggedIn } from './auth';
+import { fetchSession, login } from './api';
+import { cacheUser } from './auth';
 import { errorLabel } from './format';
 import styles from './admin.module.css';
 
@@ -17,9 +17,18 @@ export default function AdminLoginPage() {
 
   // Con sesión activa no tiene sentido ver el login: al panel.
   useEffect(() => {
-    if (isLoggedIn()) {
-      router.replace('/admin');
-    }
+    let cancelled = false;
+
+    void fetchSession().then((session) => {
+      if (!cancelled && session) {
+        cacheUser(session);
+        router.replace('/admin');
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -30,7 +39,8 @@ export default function AdminLoginPage() {
     setError(null);
 
     try {
-      await login(email.trim(), password);
+      const user = await login(email.trim(), password);
+      cacheUser(user);
       router.replace('/admin');
     } catch (err) {
       setError(errorLabel(err));

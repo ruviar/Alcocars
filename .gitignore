@@ -32,9 +32,10 @@ server/.local-postgres/
 .claude/worktrees/
 
 # Secretos del backend: nunca en el repositorio
-server/.env
+.env
+.env*.local
 # Vistas previas de emails generadas en local
-server/.mail-preview/
+.mail-preview/
 dist/
 .next/
 next-env.d.ts

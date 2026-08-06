@@ -1,6 +1,12 @@
-/** Sesión del panel de administración: token JWT y usuario en localStorage. */
+/**
+ * Identidad del usuario del panel.
+ *
+ * La sesión en sí vive en una cookie `httpOnly` que este código NO puede leer
+ * (eso es lo que la hace segura frente a XSS). Aquí solo se guarda el nombre y
+ * el email para pintarlos en la barra lateral sin una petición extra; la
+ * autoridad sobre «¿hay sesión?» es siempre `GET /api/admin/session`.
+ */
 
-const TOKEN_KEY = 'alcocars.admin.token';
 const USER_KEY = 'alcocars.admin.user';
 
 export interface AdminUser {
@@ -9,13 +15,9 @@ export interface AdminUser {
   name: string;
 }
 
-export function getToken(): string | null {
+export function getCachedUser(): AdminUser | null {
   if (typeof window === 'undefined') return null;
-  return window.localStorage.getItem(TOKEN_KEY);
-}
 
-export function getAdminUser(): AdminUser | null {
-  if (typeof window === 'undefined') return null;
   const raw = window.localStorage.getItem(USER_KEY);
   if (!raw) return null;
 
@@ -26,16 +28,10 @@ export function getAdminUser(): AdminUser | null {
   }
 }
 
-export function storeSession(token: string, user: AdminUser): void {
-  window.localStorage.setItem(TOKEN_KEY, token);
+export function cacheUser(user: AdminUser): void {
   window.localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
-export function clearSession(): void {
-  window.localStorage.removeItem(TOKEN_KEY);
+export function clearCachedUser(): void {
   window.localStorage.removeItem(USER_KEY);
-}
-
-export function isLoggedIn(): boolean {
-  return Boolean(getToken());
 }

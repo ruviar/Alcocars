@@ -1,5 +1,12 @@
-import { buildUrl } from '../lib/api';
-import { clearSession, getToken, storeSession, type AdminUser } from './auth';
+import type { AdminUser } from './auth';
+
+/**
+ * Cliente de la API de administración.
+ *
+ * La sesión viaja en una cookie `httpOnly` que el navegador adjunta sola: aquí
+ * ya no se manipula ningún token (antes iba en localStorage, legible por
+ * cualquier script). Solo hace falta `credentials: 'same-origin'`.
+ */
 
 /** El token ha caducado o no es válido: hay que volver a iniciar sesión. */
 export class AdminAuthError extends Error {
@@ -9,19 +16,13 @@ export class AdminAuthError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const token = getToken();
-
-  const res = await fetch(buildUrl(path), {
+  const res = await fetch(path, {
     ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...init?.headers,
-    },
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json', ...init?.headers },
   });
 
   if (res.status === 401) {
-    clearSession();
     throw new AdminAuthError();
   }
 
@@ -42,18 +43,23 @@ export const adminApi = {
 };
 
 export async function login(email: string, password: string): Promise<AdminUser> {
-  const res = await fetch(buildUrl('/api/admin/login'), {
+  const { user } = await request<{ user: AdminUser }>('/api/admin/login', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
+  return user;
+}
 
-  if (!res.ok) {
-    const body = (await res.json().catch(() => ({}))) as { error?: string };
-    throw new Error(body.error ?? `HTTP ${res.status}`);
+export async function logout(): Promise<void> {
+  await request('/api/admin/logout', { method: 'POST' }).catch(() => undefined);
+}
+
+/** Sesión actual según el servidor (la cookie no es legible desde el JS). */
+export async function fetchSession(): Promise<AdminUser | null> {
+  try {
+    const { user } = await request<{ user: AdminUser | null }>('/api/admin/session');
+    return user;
+  } catch {
+    return null;
   }
-
-  const data = (await res.json()) as { token: string; user: AdminUser };
-  storeSession(data.token, data.user);
-  return data.user;
 }

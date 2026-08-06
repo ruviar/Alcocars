@@ -1,0 +1,11 @@
+/** Códigos de negocio de reservas → HTTP. Compartido por las rutas de la API. */
+export const RESERVATION_HTTP_STATUS: Record<string, number> = {
+  INVALID_DATE_RANGE: 422,
+  MIN_RENTAL_DURATION: 422,
+  MAX_RENTAL_DAYS_EXCEEDED: 422,
+  INVALID_EXTRA_QUANTITY: 422,
+  EXTRA_NOT_FOUND: 422,
+  TARIFF_NOT_FOUND: 404,
+  OFFICE_NOT_FOUND: 404,
+  RETURN_OFFICE_NOT_FOUND: 404,
+};

@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { clearSession, getAdminUser, isLoggedIn } from './auth';
+import { fetchSession, logout } from './api';
+import { cacheUser, clearCachedUser, getCachedUser, type AdminUser } from './auth';
 import styles from './admin.module.css';
 
 const navItems = [
@@ -76,24 +77,39 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname() ?? '';
   const [authState, setAuthState] = useState<'checking' | 'ok'>('checking');
+  const [user, setUser] = useState<AdminUser | null>(() => getCachedUser());
 
+  // La cookie de sesión es httpOnly: el navegador no puede leerla, así que la
+  // validez la confirma el servidor.
   useEffect(() => {
-    if (!isLoggedIn()) {
-      router.replace('/admin/login');
-      return;
-    }
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- guard de sesión tras hidratar
-    setAuthState('ok');
+    let cancelled = false;
+
+    void fetchSession().then((session) => {
+      if (cancelled) return;
+
+      if (!session) {
+        clearCachedUser();
+        router.replace('/admin/login');
+        return;
+      }
+
+      cacheUser(session);
+      setUser(session);
+      setAuthState('ok');
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [router, pathname]);
 
   if (authState !== 'ok') {
     return <p className={styles.loading}>Cargando panel…</p>;
   }
 
-  const user = getAdminUser();
-
-  const handleLogout = () => {
-    clearSession();
+  const handleLogout = async () => {
+    await logout();
+    clearCachedUser();
     router.replace('/admin/login');
   };
 
@@ -124,7 +140,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <div className={styles.sidebarFooter}>
           {user && <span className={styles.sidebarUser}>{user.name} · {user.email}</span>}
-          <button type="button" className={styles.sidebarLogout} onClick={handleLogout}>
+          <button type="button" className={styles.sidebarLogout} onClick={() => void handleLogout()}>
             Cerrar sesión
           </button>
           <Link href="/" className={styles.sidebarPublicLink}>
