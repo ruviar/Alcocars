@@ -61,9 +61,20 @@ export function madridDateTimeToUtc(dateIso: string, timeIso: string): Date {
   return utc;
 }
 
+/**
+ * ¿Es una fecha real del calendario? El regex de forma no basta: `2026-13-05`
+ * produce Invalid Date y `2026-02-30` se desplaza en silencio a marzo. Se
+ * valida por ida y vuelta.
+ */
+export function isRealIsoDate(dateIso: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateIso)) return false;
+  const parsed = new Date(`${dateIso}T00:00:00.000Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === dateIso;
+}
+
 /** `YYYY-MM-DD` como fecha civil pura, para columnas `@db.Date`. */
 export function isoDateOnly(dateIso: string): Date {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateIso)) throw new Error(`Fecha inválida: ${dateIso}`);
+  if (!isRealIsoDate(dateIso)) throw new Error(`Fecha inválida: ${dateIso}`);
   return new Date(`${dateIso}T00:00:00.000Z`);
 }
 
@@ -72,4 +83,49 @@ export function calendarDaysBetween(startIso: string, endIso: string): number {
   const start = isoDateOnly(startIso).getTime();
   const end = isoDateOnly(endIso).getTime();
   return Math.round((end - start) / 86_400_000);
+}
+
+/** Fecha civil de hoy en Madrid, como `YYYY-MM-DD`. */
+export function todayInMadrid(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: MADRID,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+}
+
+/**
+ * Duración NOMINAL del alquiler en minutos: días de calendario × 24 h más la
+ * diferencia entre horas. Es la duración que percibe el cliente («de sábado a
+ * domingo a la misma hora son 24 h»), inmune al cambio de hora — la noche del
+ * cambio al horario de verano dura 23 h reales y no debe rechazar un alquiler
+ * de un día legítimo.
+ */
+export function nominalRentalMinutes(
+  pickupDate: string,
+  pickupTime: string,
+  returnDate: string,
+  returnTime: string,
+): number {
+  const parseTime = (value: string): number => {
+    const [hours = '0', minutes = '0'] = value.split(':');
+    return Number(hours) * 60 + Number(minutes);
+  };
+
+  return (
+    calendarDaysBetween(pickupDate, returnDate) * 1440 +
+    (parseTime(returnTime) - parseTime(pickupTime))
+  );
+}
+
+/**
+ * Días facturables según las condiciones publicadas: periodos de 24 horas con
+ * `graceMinutes` de cortesía en la devolución; superada la cortesía se cobra
+ * un día adicional. Ej.: recogida 10:00 y devolución 18:00 del día siguiente
+ * son 32 h → 2 días. Devolución a las 10:45 del día siguiente → 1 día.
+ */
+export function billableRentalDays(nominalMinutes: number, graceMinutes: number): number {
+  if (nominalMinutes <= 0) return 0;
+  return Math.max(1, Math.ceil((nominalMinutes - graceMinutes) / 1440));
 }

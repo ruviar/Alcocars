@@ -1,4 +1,5 @@
 import { addDays, startOfToday } from 'date-fns';
+import { readLastSearch } from '../lib/lastSearch';
 import { useNavigate } from 'react-router-dom';
 import { SUPER_CATEGORIES, tariffs, type TariffEntry } from '../data/tariffs';
 import styles from './FleetPage.module.css';
@@ -41,18 +42,20 @@ function TariffCard({ tariff }: { tariff: TariffEntry }) {
   const pricePerDay = tariff.rates[0];
 
   const handleReserve = () => {
-    const from = startOfToday();
+    const lastSearch = readLastSearch();
+    const from = lastSearch ? new Date(lastSearch.from) : startOfToday();
+    const to = lastSearch ? new Date(lastSearch.to) : addDays(from, 1);
 
     navigate('/reserva', {
       state: {
-        location: 'Zaragoza',
+        location: lastSearch?.location ?? 'Zaragoza',
         rentalCategory: mapSuperCategoryToVehicleType(tariff.superCategory),
         vehicleType: mapSuperCategoryToVehicleType(tariff.superCategory),
         superCategory: tariff.superCategory,
         tariffId: tariff.id,
         dateRange: {
           from,
-          to: addDays(from, 1),
+          to,
         },
       },
     });

@@ -31,26 +31,50 @@ export default function AdminReservationDetail() {
   const load = useCallback(async () => {
     if (!id) return;
 
+    let detail: ReservationDetail;
     try {
-      const detail = await adminApi.get<ReservationDetail>(`/api/admin/reservations/${id}`);
-      setReservation(detail);
-      setNotesDraft(detail.notes ?? '');
-
-      // Solo pedimos unidades asignables cuando tiene sentido cambiarlas.
-      if (detail.status === 'PENDING' || detail.status === 'CONFIRMED') {
-        const vehicles = await adminApi.get<AssignableVehicle[]>(
-          `/api/admin/reservations/${id}/assignable-vehicles`,
-        );
-        setAssignable(vehicles);
-      } else {
-        setAssignable(null);
-      }
+      detail = await adminApi.get<ReservationDetail>(`/api/admin/reservations/${id}`);
     } catch (err) {
       if (err instanceof AdminAuthError) {
         navigate('/admin/login', { replace: true });
         return;
       }
-      setError(errorLabel(err));
+      // Solo se sustituye la página por el error si aún no hay nada cargado;
+      // en un refresco fallido tras una acción, el detalle anterior sigue
+      // siendo útil y el aviso va en la columna de acciones.
+      setReservation((current) => {
+        if (current) {
+          setActionError('No se pudo refrescar la reserva. Recarga la página para ver el estado actual.');
+        } else {
+          setError(errorLabel(err));
+        }
+        return current;
+      });
+      return;
+    }
+
+    setReservation(detail);
+    setNotesDraft(detail.notes ?? '');
+    setError(null);
+
+    // Solo pedimos unidades asignables cuando tiene sentido cambiarlas. Si
+    // esta petición secundaria falla, no debe tumbar el detalle ya cargado.
+    if (detail.status === 'PENDING' || detail.status === 'CONFIRMED') {
+      try {
+        const vehicles = await adminApi.get<AssignableVehicle[]>(
+          `/api/admin/reservations/${id}/assignable-vehicles`,
+        );
+        setAssignable(vehicles);
+      } catch (err) {
+        if (err instanceof AdminAuthError) {
+          navigate('/admin/login', { replace: true });
+          return;
+        }
+        setAssignable([]);
+        setActionError('No se pudo cargar la lista de unidades asignables.');
+      }
+    } else {
+      setAssignable(null);
     }
   }, [id, navigate]);
 
@@ -373,7 +397,7 @@ export default function AdminReservationDetail() {
                     Asignar unidad
                   </button>
 
-                  {reservation.vehicle && (
+                  {reservation.vehicle && reservation.status === 'PENDING' && (
                     <button
                       type="button"
                       className={`${styles.btn} ${styles.btnGhost}`}
@@ -390,6 +414,13 @@ export default function AdminReservationDetail() {
                     >
                       Quitar unidad actual
                     </button>
+                  )}
+
+                  {reservation.vehicle && reservation.status === 'CONFIRMED' && (
+                    <p className={styles.pageSubtitle}>
+                      En una reserva confirmada la unidad solo puede sustituirse por otra, no
+                      quedarse vacía. Para desasignar, devuélvela antes a pendiente.
+                    </p>
                   )}
                 </div>
               )}

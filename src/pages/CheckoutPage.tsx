@@ -204,11 +204,15 @@ function resolveInitialTariffId(state: CheckoutState | null): string {
   return tariffs.find((tariff) => !tariff.consultOnly)?.id ?? tariffs[0]?.id ?? '';
 }
 
-function getTotalDays(startIso: string, endIso: string): number {
-  if (!startIso || !endIso) {
-    return 0;
-  }
+/** Margen de cortesía publicado en las condiciones: 1 h en la devolución. */
+const RETURN_GRACE_MINUTES = 60;
 
+function parseTimeMinutes(value: string): number {
+  const [hours = '0', minutes = '0'] = value.split(':');
+  return Number(hours) * 60 + Number(minutes);
+}
+
+function calendarDaysBetween(startIso: string, endIso: string): number {
   const start = new Date(`${startIso}T00:00:00`);
   const end = new Date(`${endIso}T00:00:00`);
 
@@ -216,8 +220,42 @@ function getTotalDays(startIso: string, endIso: string): number {
     return 0;
   }
 
-  const difference = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-  return difference > 0 ? difference : 0;
+  return Math.round((end.getTime() - start.getTime()) / 86_400_000);
+}
+
+/**
+ * Duración nominal en minutos: días de calendario × 24 h más la diferencia
+ * entre horas. Independiente de la zona horaria del navegador y del cambio de
+ * hora — espejo de `nominalRentalMinutes` del servidor.
+ */
+function nominalRentalMinutes(
+  startIso: string,
+  startTime: string,
+  endIso: string,
+  endTime: string,
+): number {
+  if (!startIso || !endIso) {
+    return 0;
+  }
+
+  return (
+    calendarDaysBetween(startIso, endIso) * 1440 +
+    (parseTimeMinutes(endTime) - parseTimeMinutes(startTime))
+  );
+}
+
+/**
+ * Días facturables según las condiciones publicadas: periodos de 24 h con 1 h
+ * de cortesía. Recogida 10:00 → devolución 18:00 del día siguiente son 32 h,
+ * es decir, 2 días. Espejo exacto de `billableRentalDays` del servidor, que es
+ * quien tiene la última palabra sobre el importe.
+ */
+function getBillableDays(nominalMinutes: number): number {
+  if (nominalMinutes <= 0) {
+    return 0;
+  }
+
+  return Math.max(1, Math.ceil((nominalMinutes - RETURN_GRACE_MINUTES) / 1440));
 }
 
 function getBaseTariffPrice(tariff: TariffEntry, totalDays: number): number | null {
@@ -245,18 +283,6 @@ function getBaseTariffPrice(tariff: TariffEntry, totalDays: number): number | nu
     : 0;
 
   return roundCurrency(fullWeeks * weekRate + remainingRate);
-}
-
-/** Duración real en horas contando fecha y hora (validación de cortesía; el servidor revalida). */
-function rentalHours(pickupDate: string, pickupTime: string, returnDate: string, returnTime: string): number {
-  const start = new Date(`${pickupDate}T${pickupTime}:00`);
-  const end = new Date(`${returnDate}T${returnTime}:00`);
-
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-    return 0;
-  }
-
-  return (end.getTime() - start.getTime()) / 3_600_000;
 }
 
 export default function CheckoutPage() {
@@ -316,15 +342,17 @@ export default function CheckoutPage() {
     [selectedTariffId],
   );
 
-  const totalDays = useMemo(
-    () => getTotalDays(pickupDate, returnDate),
-    [pickupDate, returnDate],
+  const nominalMinutes = useMemo(
+    () => nominalRentalMinutes(pickupDate, pickupTime, returnDate, returnTime),
+    [pickupDate, pickupTime, returnDate, returnTime],
   );
+
+  const totalDays = useMemo(() => getBillableDays(nominalMinutes), [nominalMinutes]);
 
   const isDifferentOfficeReturn = returnOfficeSlug !== pickupOfficeSlug;
 
   const plannedKm = Number.parseInt(plannedKmInput, 10);
-  const isPlannedKmValid = Number.isFinite(plannedKm) && plannedKm > 0;
+  const isPlannedKmValid = Number.isFinite(plannedKm) && plannedKm > 0 && plannedKm <= 50_000;
   const includedKm = selectedTariff ? selectedTariff.kmPerDay * totalDays : 0;
   const extraKm = Math.max((isPlannedKmValid ? plannedKm : 0) - includedKm, 0);
   const extraKmSurcharge = selectedTariff ? roundCurrency(extraKm * selectedTariff.kmExtra) : 0;
@@ -363,7 +391,7 @@ export default function CheckoutPage() {
     : roundCurrency(baseTariffPrice + extraKmSurcharge + extrasTotal);
 
   const isDateRangeValid = pickupDate.length > 0 && returnDate.length > 0 && returnDate > pickupDate;
-  const meetsMinDuration = rentalHours(pickupDate, pickupTime, returnDate, returnTime) >= 24;
+  const meetsMinDuration = nominalMinutes >= 24 * 60;
   const isWithinMaxDays = totalDays <= MAX_RENTAL_DAYS;
   const isStep1Valid = Boolean(
     pickupOfficeSlug
@@ -758,7 +786,15 @@ export default function CheckoutPage() {
                         <span>Devolución</span>
                         <strong>{formatHumanDate(returnDate)}</strong>
                       </p>
+                      <p>
+                        <span>Días facturables</span>
+                        <strong>{totalDays > 0 ? totalDays : '--'}</strong>
+                      </p>
                     </div>
+                    <p className={styles.helperText}>
+                      Cada día de alquiler son 24 horas desde la recogida, con 1 hora de cortesía en la
+                      devolución; superada la cortesía se cuenta un día adicional.
+                    </p>
                   </section>
 
                   <div className={styles.fieldGridTwo}>
@@ -846,6 +882,7 @@ export default function CheckoutPage() {
                         className={styles.inputControl}
                         type="number"
                         min={1}
+                        max={50000}
                         step={1}
                         value={plannedKmInput}
                         onChange={(event) => {
@@ -855,8 +892,8 @@ export default function CheckoutPage() {
                         required
                       />
                       <span className={styles.helperText}>
-                        La tarifa incluye 200 km por día. Si prevés más, te calculamos el recargo por adelantado
-                        para que no haya sorpresas.
+                        La tarifa incluye 200 km por día (máximo del formulario: 50.000 km).
+                        Si prevés más kilómetros, te calculamos el recargo por adelantado para que no haya sorpresas.
                       </span>
                     </label>
                   </div>
@@ -1105,6 +1142,7 @@ export default function CheckoutPage() {
                           onChange={handlePersonalDataChange}
                           placeholder="Tu nombre"
                           autoComplete="given-name"
+                          maxLength={80}
                           required
                         />
                       </label>
@@ -1119,6 +1157,7 @@ export default function CheckoutPage() {
                           onChange={handlePersonalDataChange}
                           placeholder="Tus apellidos"
                           autoComplete="family-name"
+                          maxLength={120}
                           required
                         />
                       </label>
@@ -1135,6 +1174,7 @@ export default function CheckoutPage() {
                           onChange={handlePersonalDataChange}
                           placeholder="tu@email.com"
                           autoComplete="email"
+                          maxLength={160}
                           required
                         />
                       </label>
@@ -1159,6 +1199,7 @@ export default function CheckoutPage() {
                           value={personalData.observaciones}
                           onChange={handlePersonalDataChange}
                           placeholder="Cuéntanos cualquier detalle que nos ayude a preparar tu reserva"
+                          maxLength={1000}
                           rows={4}
                         />
                       </label>

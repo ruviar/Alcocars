@@ -55,7 +55,16 @@ export default function AdminReservations() {
     adminApi
       .get<ReservationListResponse>(`/api/admin/reservations?${query.toString()}`)
       .then((response) => {
-        if (!cancelled) setData(response);
+        if (cancelled) return;
+
+        // Página fuera de rango (p. ej. quedaban 25 pendientes en la página 2
+        // y ya solo hay 15): volver a la primera en vez de mostrar un vacío.
+        if (response.rows.length === 0 && response.total > 0 && page > 1) {
+          updateParams({ page: null });
+          return;
+        }
+
+        setData(response);
       })
       .catch((err: unknown) => {
         if (cancelled) return;
@@ -72,7 +81,7 @@ export default function AdminReservations() {
     return () => {
       cancelled = true;
     };
-  }, [status, needsCheck, page, search, navigate]);
+  }, [status, needsCheck, page, search, navigate, updateParams]);
 
   const totalPages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
 

@@ -320,10 +320,12 @@ async function main() {
   console.log(`✅ ${vehiclesData.length} vehicles seeded`);
 
   // Upsert default admin user
+  // La contraseña por defecto SOLO se fija al crear el usuario: si el equipo
+  // la cambió, un re-seed no debe devolverla en silencio a admin123.
   const passwordHash = await bcrypt.hash('admin123', 10);
   await prisma.adminUser.upsert({
     where: { email: 'admin@alcocars.es' },
-    update: { name: 'Administrador', passwordHash },
+    update: { name: 'Administrador' },
     create: { email: 'admin@alcocars.es', passwordHash, name: 'Administrador' },
   });
   console.log('✅ Admin user seeded');

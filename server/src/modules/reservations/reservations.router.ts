@@ -5,7 +5,6 @@ import {
   createBookingRequest,
   getAvailableTariffOffers,
   getReservationByCode,
-  getReservationById,
 } from './reservations.service';
 
 /** Códigos de negocio → HTTP. Cualquier otro error sube a Fastify como 500. */
@@ -89,16 +88,11 @@ export async function reservationsRouter(app: FastifyInstance) {
     }
   });
 
-  // GET /api/reservations/code/:code — consulta pública por código
+  // GET /api/reservations/code/:code — consulta pública por código.
+  // No existe consulta pública por id: el código ALC-XXXXXXXX es aleatorio y
+  // hace de credencial; un id enumerable expondría datos del cliente.
   app.get<{ Params: { code: string } }>('/reservations/code/:code', async (request, reply) => {
     const reservation = await getReservationByCode(request.params.code.trim().toUpperCase());
-    if (!reservation) return reply.status(404).send({ error: 'RESERVATION_NOT_FOUND' });
-    return reply.send(reservation);
-  });
-
-  // GET /api/reservations/:id
-  app.get<{ Params: { id: string } }>('/reservations/:id', async (request, reply) => {
-    const reservation = await getReservationById(request.params.id);
     if (!reservation) return reply.status(404).send({ error: 'RESERVATION_NOT_FOUND' });
     return reply.send(reservation);
   });

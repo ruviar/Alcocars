@@ -65,10 +65,14 @@ describe('updateReservationStatus', () => {
     );
   });
 
-  it('permite reabrir una cancelada', async () => {
+  it('reabrir una cancelada desasigna la unidad y la marca para revisar disponibilidad', async () => {
     const update = mockCurrent('CANCELLED');
     await updateReservationStatus('r1', 'PENDING');
-    expect(update).toHaveBeenCalled();
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { status: 'PENDING', vehicleId: null, needsAvailabilityCheck: true },
+      }),
+    );
   });
 
   it('404 cuando la reserva no existe', async () => {
@@ -163,7 +167,15 @@ describe('updateReservation (asignación de unidad)', () => {
     );
   });
 
-  it('desasignar marca la reserva para revisar disponibilidad', async () => {
+  it('no se puede desasignar la unidad de una reserva confirmada', async () => {
+    tx.reservation.findUnique.mockResolvedValue({ ...baseReservation, status: 'CONFIRMED' });
+
+    await expect(updateReservation('r1', { vehicleId: null })).rejects.toThrow(
+      'VEHICLE_REQUIRED_FOR_STATUS',
+    );
+  });
+
+  it('desasignar en una pendiente marca la reserva para revisar disponibilidad', async () => {
     await updateReservation('r1', { vehicleId: null });
 
     expect(tx.reservation.update).toHaveBeenCalledWith(

@@ -14,7 +14,7 @@ export default function LegalPage() {
             <h1 className={styles.title}>Documento no disponible</h1>
             <p className={styles.intro}>
               No encontramos el documento legal solicitado. Puedes volver al inicio o consultar las secciones
-              disponibles desde el pie de pagina.
+              disponibles desde el pie de página.
             </p>
             <Link className={styles.homeButton} to="/">
               Volver al inicio

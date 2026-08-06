@@ -21,10 +21,10 @@ const validBody = {
   tariffId: 'coche-media',
   pickupOfficeSlug: 'zaragoza',
   returnOfficeSlug: 'zaragoza',
-  pickupDate: '2026-08-12',
+  pickupDate: '2026-09-12',
   pickupTime: '10:00',
-  returnDate: '2026-08-15',
-  returnTime: '18:00',
+  returnDate: '2026-09-15',
+  returnTime: '10:30',
   plannedKm: 900,
   extras: [{ id: 'skiRackChains', quantity: 1 }],
   client: {
@@ -71,7 +71,8 @@ describe('createBookingRequest', () => {
     const result = await createBookingRequest(parse());
 
     expect(result.confirmationCode).toBe('ALC-TESTCODE');
-    // 3 días de gama media (205) + 300 km extra × 0,20 (60) + porta esquís (34,80)
+    // 72,5 h − 1 h de cortesía → 3 días de gama media (205)
+    // + 300 km extra × 0,20 (60) + porta esquís (34,80)
     expect(result.quote.baseTotal).toBe(205);
     expect(result.quote.extraKm).toBe(300);
     expect(result.quote.extraKmSurcharge).toBe(60);
@@ -100,9 +101,74 @@ describe('createBookingRequest', () => {
   it('guarda las horas de recogida y devolución en hora española', async () => {
     const result = await createBookingRequest(parse());
 
-    // agosto → CEST (UTC+2)
-    expect(result.pickupAt.toISOString()).toBe('2026-08-12T08:00:00.000Z');
-    expect(result.returnAt.toISOString()).toBe('2026-08-15T16:00:00.000Z');
+    // septiembre → CEST (UTC+2)
+    expect(result.pickupAt.toISOString()).toBe('2026-09-12T08:00:00.000Z');
+    expect(result.returnAt.toISOString()).toBe('2026-09-15T08:30:00.000Z');
+  });
+
+  it('cobra un día adicional cuando la devolución supera la hora de cortesía', async () => {
+    // 3 días civiles pero devolución a las 18:00 (recogida 10:00): 80 h
+    // nominales − 1 h de cortesía → 4 días facturables (gama media: 241 €).
+    const result = await createBookingRequest(parse({ returnTime: '18:00', plannedKm: 800 }));
+
+    expect(result.quote.totalDays).toBe(4);
+    expect(result.quote.baseTotal).toBe(241);
+    expect(result.quote.includedKm).toBe(800);
+    expect(result.quote.extraKmSurcharge).toBe(0);
+  });
+
+  it('no cobra día extra si la devolución entra en la hora de cortesía', async () => {
+    // 24 h + 45 min: dentro de la cortesía → 1 día.
+    const result = await createBookingRequest(
+      parse({ returnDate: '2026-09-13', returnTime: '10:45', plannedKm: 200 }),
+    );
+
+    expect(result.quote.totalDays).toBe(1);
+    expect(result.quote.baseTotal).toBe(81);
+  });
+
+  it('acepta el alquiler de un día que cruza el cambio de hora de primavera (23 h reales)', async () => {
+    // Noche del 28/03/2027: los relojes saltan de 02:00 a 03:00. De sábado
+    // 10:00 a domingo 10:00 son 23 h reales pero 24 h nominales: se acepta.
+    const result = await createBookingRequest(
+      parse({
+        pickupDate: '2027-03-27',
+        returnDate: '2027-03-28',
+        pickupTime: '10:00',
+        returnTime: '10:00',
+        plannedKm: 200,
+      }),
+    );
+
+    expect(result.quote.totalDays).toBe(1);
+  });
+
+  it('impone el recargo por devolver en otra oficina aunque el navegador no lo mande', async () => {
+    const result = await createBookingRequest(parse({ returnOfficeSlug: 'tudela', extras: [] }));
+
+    const surcharge = result.quote.extras.find((extra) => extra.id === 'differentOfficeReturn');
+    expect(surcharge).toBeDefined();
+    expect(surcharge!.totalPrice).toBe(69.6);
+  });
+
+  it('no permite duplicar el recargo de otra oficina mandándolo también como extra', async () => {
+    const result = await createBookingRequest(
+      parse({
+        returnOfficeSlug: 'tudela',
+        extras: [{ id: 'differentOfficeReturn', quantity: 1 }],
+      }),
+    );
+
+    const surcharges = result.quote.extras.filter((extra) => extra.id === 'differentOfficeReturn');
+    expect(surcharges).toHaveLength(1);
+  });
+
+  it('en un cliente existente no sobrescribe la identidad, solo el teléfono', async () => {
+    await createBookingRequest(parse());
+
+    const upsert = tx.client.upsert.mock.calls[0][0];
+    expect(upsert.update).toEqual({ phone: '+34600000001' });
+    expect(upsert.create.firstName).toBe('Ana');
   });
 
   it('no pierde la solicitud cuando no hay unidad libre: la marca para revisión', async () => {
@@ -143,7 +209,9 @@ describe('createBookingRequest', () => {
   });
 
   it('acepta alquileres largos: ya no hay tope de 7 días', async () => {
-    const result = await createBookingRequest(parse({ returnDate: '2026-08-26', plannedKm: 2800 }));
+    const result = await createBookingRequest(
+      parse({ returnDate: '2026-09-26', returnTime: '10:00', plannedKm: 2800 }),
+    );
 
     expect(result.quote.totalDays).toBe(14);
     // 2 semanas de gama media a 337 €
@@ -152,7 +220,7 @@ describe('createBookingRequest', () => {
 
   it('rechaza rangos por encima del máximo del formulario', async () => {
     await expect(
-      createBookingRequest(parse({ returnDate: '2027-08-15', plannedKm: 5000 })),
+      createBookingRequest(parse({ returnDate: '2027-09-15', plannedKm: 5000 })),
     ).rejects.toThrow('MAX_RENTAL_DAYS_EXCEEDED');
   });
 
@@ -175,8 +243,26 @@ describe('checkoutBodySchema', () => {
   });
 
   it('rechaza una devolución anterior a la recogida', () => {
-    const result = checkoutBodySchema.safeParse({ ...validBody, returnDate: '2026-08-01' });
+    const result = checkoutBodySchema.safeParse({ ...validBody, returnDate: '2026-09-01' });
     expect(result.success).toBe(false);
+  });
+
+  it('rechaza recogidas en el pasado', () => {
+    const result = checkoutBodySchema.safeParse({
+      ...validBody,
+      pickupDate: '2020-01-01',
+      returnDate: '2020-01-03',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza fechas que no existen en el calendario', () => {
+    expect(
+      checkoutBodySchema.safeParse({ ...validBody, pickupDate: '2026-13-05' }).success,
+    ).toBe(false);
+    expect(
+      checkoutBodySchema.safeParse({ ...validBody, returnDate: '2027-02-30' }).success,
+    ).toBe(false);
   });
 
   it('rechaza extras repetidos', () => {

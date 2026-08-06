@@ -35,3 +35,4 @@ server/.local-postgres/
 server/.env
 # Vistas previas de emails generadas en local
 server/.mail-preview/
+dist/

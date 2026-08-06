@@ -1,7 +1,13 @@
-import type { Prisma, VehicleCategory } from '@prisma/client';
+import { Prisma, type VehicleCategory } from '@prisma/client';
 import { prisma } from '../../db/prisma';
 import { generateConfirmationCode } from '../../utils/confirmationCode';
-import { calendarDaysBetween, isoDateOnly, madridDateTimeToUtc } from '../../utils/datetime';
+import {
+  billableRentalDays,
+  calendarDaysBetween,
+  isoDateOnly,
+  madridDateTimeToUtc,
+  nominalRentalMinutes,
+} from '../../utils/datetime';
 import { sendBookingEmails, type SendEmailResult } from '../../utils/mailer';
 import {
   QuoteError,
@@ -25,7 +31,38 @@ const CATEGORY_BY_SUPER_CATEGORY: Record<SuperCategory, VehicleCategory> = {
 
 export class ReservationError extends Error {}
 
-/** Unidades activas de una categoría sin reserva solapada en el rango. */
+/**
+ * Reintenta una transacción Serializable cuando Postgres aborta por conflicto
+ * de serialización (Prisma P2034). Sin esto, dos checkouts simultáneos sobre
+ * la misma sede/categoría — o un doble clic en «Enviar» — devuelven un 500.
+ */
+async function withSerializableRetry<T>(run: () => Promise<T>, attempts = 3): Promise<T> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await run();
+    } catch (err) {
+      lastError = err;
+      const isSerializationConflict =
+        err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2034';
+      if (!isSerializationConflict || attempt === attempts) throw err;
+      await new Promise((resolve) => setTimeout(resolve, 50 * attempt));
+    }
+  }
+
+  throw lastError;
+}
+
+/**
+ * Unidades activas de una categoría sin reserva solapada en el rango.
+ *
+ * El solape se evalúa por día civil con intervalo CERRADO (lte/gte): una
+ * unidad que se devuelve el día 12 no se ofrece para una recogida ese mismo
+ * día 12, aunque las horas no choquen. Es deliberadamente conservador: entre
+ * dos alquileres hace falta revisar y limpiar el vehículo, y el equipo puede
+ * asignar a mano desde el panel si quiere apurar el mismo día.
+ */
 function availabilityFilter(
   officeId: string,
   category: VehicleCategory,
@@ -40,8 +77,8 @@ function availabilityFilter(
       reservations: {
         some: {
           status: { not: 'CANCELLED' },
-          startDate: { lt: endDate },
-          endDate: { gt: startDate },
+          startDate: { lte: endDate },
+          endDate: { gte: startDate },
         },
       },
     },
@@ -84,8 +121,8 @@ export async function getAvailableTariffOffers(params: {
         reservations: {
           some: {
             status: { not: 'CANCELLED' },
-            startDate: { lt: end },
-            endDate: { gt: start },
+            startDate: { lte: end },
+            endDate: { gte: start },
           },
         },
       },
@@ -134,12 +171,35 @@ export interface BookingRequestResult {
  *     para que el frontend pueda avisar si el aviso no salió.
  */
 export async function createBookingRequest(input: CheckoutBody): Promise<BookingRequestResult> {
-  const totalDays = calendarDaysBetween(input.pickupDate, input.returnDate);
+  // Duración nominal («de sábado 10:00 a domingo 10:00 son 24 h», con o sin
+  // cambio de hora de por medio). El mínimo publicado es de 24 horas.
+  const nominalMinutes = nominalRentalMinutes(
+    input.pickupDate,
+    input.pickupTime,
+    input.returnDate,
+    input.returnTime,
+  );
+  if (nominalMinutes <= 0) throw new ReservationError('INVALID_DATE_RANGE');
+  if (nominalMinutes < RENTAL_RULES.minRentalHours * 60) {
+    throw new ReservationError('MIN_RENTAL_DURATION');
+  }
+
+  // Días facturables según las condiciones publicadas: periodos de 24 h con
+  // 1 h de cortesía en la devolución. 32 h → 2 días; 24 h 45 min → 1 día.
+  const totalDays = billableRentalDays(nominalMinutes, RENTAL_RULES.returnGraceMinutes);
   if (totalDays < 1) throw new ReservationError('INVALID_DATE_RANGE');
   if (totalDays > RENTAL_RULES.maxRentalDays) throw new ReservationError('MAX_RENTAL_DAYS_EXCEEDED');
 
   const tariff = getTariff(input.tariffId);
   if (!tariff) throw new ReservationError('TARIFF_NOT_FOUND');
+
+  // El recargo por devolver en otra oficina lo impone el SERVIDOR: no se
+  // confía en que el navegador haya añadido el extra correspondiente.
+  const isDifferentOfficeReturn = input.returnOfficeSlug !== input.pickupOfficeSlug;
+  const extras = input.extras.filter((extra) => extra.id !== 'differentOfficeReturn');
+  if (isDifferentOfficeReturn) {
+    extras.push({ id: 'differentOfficeReturn', quantity: 1 });
+  }
 
   let quote: Quote;
   try {
@@ -147,7 +207,7 @@ export async function createBookingRequest(input: CheckoutBody): Promise<Booking
       tariffId: input.tariffId,
       totalDays,
       plannedKm: input.plannedKm,
-      extras: input.extras,
+      extras,
     });
   } catch (err) {
     throw err instanceof QuoteError ? new ReservationError(err.message) : err;
@@ -155,16 +215,14 @@ export async function createBookingRequest(input: CheckoutBody): Promise<Booking
 
   const pickupAt = madridDateTimeToUtc(input.pickupDate, input.pickupTime);
   const returnAt = madridDateTimeToUtc(input.returnDate, input.returnTime);
-  if (returnAt.getTime() - pickupAt.getTime() < RENTAL_RULES.minRentalHours * 3_600_000) {
-    throw new ReservationError('MIN_RENTAL_DURATION');
-  }
 
   const startDate = isoDateOnly(input.pickupDate);
   const endDate = isoDateOnly(input.returnDate);
   const category = CATEGORY_BY_SUPER_CATEGORY[tariff.superCategory];
 
-  const created = await prisma.$transaction(
-    async (tx) => {
+  const created = await withSerializableRetry(() =>
+    prisma.$transaction(
+      async (tx) => {
       const pickupOffice = await tx.office.findUnique({ where: { slug: input.pickupOfficeSlug } });
       if (!pickupOffice) throw new ReservationError('OFFICE_NOT_FOUND');
 
@@ -182,11 +240,12 @@ export async function createBookingRequest(input: CheckoutBody): Promise<Booking
         select: { id: true },
       });
 
+      // En un cliente existente solo se refresca el teléfono: el endpoint es
+      // público y cualquiera que conozca un email podría, si no, reescribir la
+      // identidad (nombre y apellidos) del cliente real en todo su histórico.
       const client = await tx.client.upsert({
         where: { email: input.client.email },
         update: {
-          firstName: input.client.firstName,
-          lastName: input.client.lastName,
           phone: input.client.phone,
         },
         create: {
@@ -246,8 +305,9 @@ export async function createBookingRequest(input: CheckoutBody): Promise<Booking
         pickupOffice: { city: pickupOffice.city, address: pickupOffice.address },
         returnOffice: { city: returnOffice.city, address: returnOffice.address },
       };
-    },
-    { isolationLevel: 'Serializable' },
+      },
+      { isolationLevel: 'Serializable' },
+    ),
   );
 
   const email = await sendBookingEmails({
@@ -274,18 +334,6 @@ export async function createBookingRequest(input: CheckoutBody): Promise<Booking
   };
 }
 
-export async function getReservationById(id: string) {
-  return prisma.reservation.findUnique({
-    where: { id },
-    include: {
-      vehicle: { select: { name: true, brand: true, imageUrl: true, dailyRate: true } },
-      client: { select: { firstName: true, lastName: true, email: true } },
-      office: { select: { city: true, address: true, phone: true } },
-      returnOffice: { select: { city: true, address: true, phone: true } },
-      extras: true,
-    },
-  });
-}
 
 /** Consulta pública por código de confirmación, para el «¿y mi reserva?». */
 export async function getReservationByCode(confirmationCode: string) {

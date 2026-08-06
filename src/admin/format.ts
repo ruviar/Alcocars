@@ -82,6 +82,8 @@ export const API_ERROR_LABELS: Record<string, string> = {
   VEHICLE_NOT_FOUND: 'El vehículo no existe o está desactivado.',
   INVALID_STATUS_TRANSITION: 'Ese cambio de estado no está permitido desde el estado actual.',
   NO_VEHICLE_ASSIGNED: 'Asigna una unidad antes de confirmar la reserva.',
+  VEHICLE_REQUIRED_FOR_STATUS:
+    'Una reserva confirmada no puede quedarse sin unidad: devuélvela a pendiente o asigna directamente otra unidad.',
   VEHICLE_WRONG_OFFICE: 'Esa unidad pertenece a otra oficina.',
   VEHICLE_WRONG_CATEGORY: 'Esa unidad no es de la categoría de la gama solicitada.',
   VEHICLE_ALREADY_BOOKED: 'Esa unidad ya tiene una reserva que se solapa con estas fechas.',

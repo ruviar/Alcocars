@@ -1,7 +1,11 @@
 import { z } from 'zod';
 import { EXTRAS, RENTAL_RULES, TARIFFS } from '../../config/catalog';
+import { isRealIsoDate, todayInMadrid } from '../../utils/datetime';
 
-const DATE = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato esperado: YYYY-MM-DD');
+const DATE = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato esperado: YYYY-MM-DD')
+  .refine(isRealIsoDate, 'La fecha no existe en el calendario');
 const TIME = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Formato esperado: HH:mm');
 
 const tariffIdSchema = z.enum(TARIFFS.map((tariff) => tariff.id) as [string, ...string[]]);
@@ -36,6 +40,14 @@ export const checkoutBodySchema = z
     }),
   })
   .superRefine((value, ctx) => {
+    if (value.pickupDate < todayInMadrid()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['pickupDate'],
+        message: 'La fecha de recogida no puede estar en el pasado',
+      });
+    }
+
     if (value.returnDate < value.pickupDate) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

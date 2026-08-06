@@ -4,6 +4,7 @@ import { addDays, format, startOfToday } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { officeLabel, offices } from '../../data/offices';
+import { saveLastSearch } from '../../lib/lastSearch';
 import styles from './BookingEngine.module.css';
 
 const locations = offices.map((office) => office.city);
@@ -110,6 +111,15 @@ export default function BookingEngine() {
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (dateRange?.from && dateRange?.to) {
+      saveLastSearch({
+        location,
+        from: dateRange.from.toISOString(),
+        to: dateRange.to.toISOString(),
+      });
+    }
+
     navigate('/reserva', {
       state: {
         dateRange,

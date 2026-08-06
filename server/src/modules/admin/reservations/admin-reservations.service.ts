@@ -100,9 +100,17 @@ export async function updateReservationStatus(id: string, nextStatus: Reservatio
     throw new AdminReservationError('NO_VEHICLE_ASSIGNED');
   }
 
+  // Al reabrir una cancelada, la unidad que tenía puede haberse asignado a
+  // otra reserva mientras tanto (los solapes ignoran CANCELLED a propósito).
+  // Se desasigna y se marca para revisar disponibilidad: el panel obliga a
+  // asignar de nuevo antes de poder confirmar.
+  const reopeningCancelled = reservation.status === 'CANCELLED' && nextStatus === 'PENDING';
+
   return prisma.reservation.update({
     where: { id },
-    data: { status: nextStatus },
+    data: reopeningCancelled
+      ? { status: nextStatus, vehicleId: null, needsAvailabilityCheck: true }
+      : { status: nextStatus },
     include: LIST_INCLUDE,
   });
 }
@@ -137,8 +145,10 @@ export async function listAssignableVehicles(reservationId: string) {
           some: {
             id: { not: reservationId },
             status: { not: 'CANCELLED' },
-            startDate: { lt: reservation.endDate },
-            endDate: { gt: reservation.startDate },
+            // Intervalo cerrado: mismo criterio conservador que el checkout
+            // público (sin rotación de la misma unidad el mismo día civil).
+            startDate: { lte: reservation.endDate },
+            endDate: { gte: reservation.startDate },
           },
         },
       },
@@ -172,6 +182,13 @@ export async function updateReservation(id: string, body: UpdateReservationBody)
 
     if (body.vehicleId !== undefined) {
       if (body.vehicleId === null) {
+        // Una reserva confirmada o en curso no puede quedarse sin unidad en
+        // silencio: primero hay que devolverla a pendiente (o reasignar
+        // directamente otra unidad, que sí está permitido).
+        if (reservation.status === 'CONFIRMED' || reservation.status === 'ACTIVE') {
+          throw new AdminReservationError('VEHICLE_REQUIRED_FOR_STATUS');
+        }
+
         // Desasignar deja la reserva pendiente de revisión de disponibilidad.
         data.vehicle = { disconnect: true };
         data.needsAvailabilityCheck = true;
@@ -195,8 +212,8 @@ export async function updateReservation(id: string, body: UpdateReservationBody)
             id: { not: id },
             vehicleId: vehicle.id,
             status: { not: 'CANCELLED' },
-            startDate: { lt: reservation.endDate },
-            endDate: { gt: reservation.startDate },
+            startDate: { lte: reservation.endDate },
+            endDate: { gte: reservation.startDate },
           },
           select: { confirmationCode: true },
         });
